@@ -510,7 +510,7 @@ void wl_module_send(uint8_t * value, uint8_t len)
    }
    
    // Wait until last paket is send
-   lcd_putc('A');
+   //lcd_putc('A');
    wl_module_CE_lo;
    _delay_us(50);
    PTX = 1;                        // Set to transmitter mode

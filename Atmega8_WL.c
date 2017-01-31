@@ -544,61 +544,10 @@ int main (void)
             _delay_ms(5);
             wl_module_CE_hi;
              */
-            uint8_t status;
             
-            wl_module_rx_config();
-            
-            // Read wl_module status
-            wl_module_CSN_lo;
-            _delay_us(10);
-            
-            // Pull down chip select
-            wl_status = spi_fast_shift(NOP);// Read status register
-            
-            _delay_us(10);
-            wl_module_CSN_hi;                               // Pull up chip select
-
-            
-            lcd_gotoxy(0,1);
-            lcd_puthex(wl_status & (1<<TX_DS));
-            lcd_puthex(wl_status & (1<<MAX_RT));
-            lcd_puthex(wl_status & (1<<TX_FULL));
-            
-            lcd_gotoxy(0,0);
-            lcd_puts("          ");
-            if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
-            {
-               lcd_gotoxy(0,0);
-               
-               lcd_puts("RX");
-               wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
-               PTX=0;
-            }
-           
-            if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
-            {
-               lcd_gotoxy(3,0);
-               
-               lcd_puts("TX");
-               wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
-               PTX=0;
-            }
-            
-            if (wl_status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
-            {
-               lcd_gotoxy(6,0);
-               
-               lcd_puts("RT");
-
-               wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
-               wl_module_CE_hi;
-               _delay_us(10);
-               wl_module_CE_lo;
-            }
-
             lcd_gotoxy(10,1);
-            lcd_puthex(wl_spi_status);
-
+            lcd_puthex(wl_spi_status); // In ISR gesetzt
+            
             if (wl_spi_status & (1<<7))
             {
                if (int0counter < 0xFF)
@@ -609,10 +558,60 @@ int main (void)
                {
                   int0counter=0;
                }
-
+               
                wl_spi_status &= ~(1<<7);
             }
+
+            uint8_t status;
+            
+            // Lesen vorbereiten
+            
+            wl_module_rx_config();
+            
+            // Read wl_module status
+            wl_module_CSN_lo;                               // Pull down chip select
+            _delay_us(10);
+            wl_status = spi_fast_shift(NOP);                // Read status register
+            _delay_us(10);
+            wl_module_CSN_hi;                               // Pull up chip select
+
+            
+            lcd_gotoxy(0,1);
+            lcd_puthex(wl_status & (1<<RX_DR));
+            lcd_puthex(wl_status & (1<<TX_DS));
+            lcd_puthex(wl_status & (1<<MAX_RT));
+            lcd_puthex(wl_status & (1<<TX_FULL));
+            
+            lcd_gotoxy(0,0);
+            lcd_puts("          ");
+            if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
+            {
+               lcd_gotoxy(0,0);
+               lcd_puts("RX");
+               wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
+               PTX=0;
+            }
            
+            if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
+            {
+               lcd_gotoxy(3,0);
+               lcd_puts("TX");
+               wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
+               PTX=0;
+            }
+            
+            if (wl_status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
+            {
+               lcd_gotoxy(6,0);
+               lcd_puts("RT");
+
+               wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
+               wl_module_CE_hi;
+               _delay_us(10);
+               wl_module_CE_lo;
+            }
+
+            
             lcd_gotoxy(14,1);
             lcd_puthex(int0counter);
             
@@ -629,10 +628,11 @@ int main (void)
             uint8_t rec = wl_module_get_rx_pw(0);
             lcd_gotoxy(0,2);
             lcd_puthex(rec);
-            
+            lcd_putc(' ');
             uint8_t data[16] = {};
             uint8_t readstatus = wl_module_get_data((void*)&data);
             uint8_t i;
+            lcd_puthex(readstatus);
             lcd_putc(' ');
             lcd_putint1(data[0]);
             lcd_putc('.');
@@ -642,6 +642,10 @@ int main (void)
             }
            lcd_putc(' ');
             lcd_puthex(data[9]);
+            
+            
+            
+            
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
             {
@@ -672,12 +676,29 @@ int main (void)
             lcd_gotoxy(6,3);
             
             lcd_putc('a');
+            /*
+            wl_module_tx_config(0);
             
-         //   wl_module_send(payload,wl_module_PAYLOAD);
+            wl_module_send(payload,wl_module_PAYLOAD);
             lcd_putc('G');
+            
+            
+            wl_module_CSN_lo;
+            _delay_us(10);
+            // Pull down chip select
+            uint8_t tx_status = spi_fast_shift(NOP);// Read status register
+            
+            _delay_us(10);
+            wl_module_CSN_hi;                               // Pull up chip select
+            lcd_puthex(tx_status);
+
+            
+            
             maincounter++;
             PTX=0;
-            
+             
+             */
+            wl_module_rx_config();
             lcd_gotoxy(0,3);
             
             lcd_puthex(maincounter);
