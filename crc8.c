@@ -17,7 +17,7 @@ uint8_t crc8( uint8_t *data, uint16_t number_of_bytes_in_data )
 
 	for (loop_count = 0; loop_count != number_of_bytes_in_data; loop_count++)
 	{
-		b = data[loop_count];
+		b = wl_data[loop_count];
 		
 		bit_counter = 8;
 		do {
