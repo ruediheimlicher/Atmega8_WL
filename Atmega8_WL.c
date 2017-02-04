@@ -519,7 +519,7 @@ int main (void)
    DDRC |= (1<<1);
    lcd_clr_line(0);
   #pragma mark while
-   uint8_t readstatus = wl_module_get_data((void*)&data);
+   uint8_t readstatus = wl_module_get_data((void*)&wl_data);
 //   uint8_t readstatus = wl_module_get_status();
    while (1)
 	{
@@ -593,19 +593,19 @@ int main (void)
          lcd_gotoxy(0,3);
          lcd_puthex(rec);
          lcd_putc(' ');
-         uint8_t data[wl_module_PAYLOAD] = {};
-         uint8_t readstatus = wl_module_get_data((void*)&data);
+         //uint8_t data[wl_module_PAYLOAD] = {};
+         uint8_t readstatus = wl_module_get_data((void*)&wl_data);
          uint8_t i;
          lcd_puthex(readstatus);
          lcd_putc(' ');
-         lcd_putint1(data[0]);
+         lcd_putint1(wl_data[0]);
          lcd_putc('.');
          for (i=2; i<9; i++)
          {
-            lcd_putint1(data[i]);
+            lcd_putint1(wl_data[i]);
          }
          lcd_putc(' ');
-         lcd_puthex(data[9]);
+         lcd_puthex(wl_data[9]);
          
          
          
@@ -792,9 +792,9 @@ int main (void)
             lcd_gotoxy(0,2);
             //lcd_puthex(rec);
             lcd_putc(' ');
-            uint8_t data[wl_module_PAYLOAD] = {};
-            uint8_t readstatus = wl_module_get_data((void*)&data);
-            uint8_t i;
+  //          uint8_t data[wl_module_PAYLOAD] = {};
+  //          uint8_t readstatus = wl_module_get_data((void*)&wl_data);
+ //           uint8_t i;
  //           lcd_puthex(readstatus);
             /*
             lcd_putc(' ');
@@ -806,7 +806,7 @@ int main (void)
             }
              */
            lcd_putc(' ');
-            lcd_puthex(data[9]);
+            lcd_puthex(wl_data[9]);
             
             
             
