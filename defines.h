@@ -20,9 +20,9 @@
 
 
 //Oszi
-#define OSZIPORT           PORTD
-#define OSZIDDR            DDRD
-#define PULSA              4
+#define OSZIPORT           PORTC
+#define OSZIDDR            DDRC
+#define PULSA              3
 //#define OSZI_PULS_B        5
 #define OSZIA_LO OSZIPORT &= ~(1<<PULSA)
 #define OSZIA_HI OSZIPORT |= (1<<PULSA)

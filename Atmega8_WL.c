@@ -569,18 +569,41 @@ int main (void)
          lcd_puts("          ");
          if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
          {
+            OSZIA_LO;
             lcd_gotoxy(0,0);
             lcd_puts("RX");
+            uint8_t rec = wl_module_get_rx_pw(0);
+            lcd_gotoxy(0,3);
+            lcd_puthex(rec);
+            lcd_putc(' ');
+            uint8_t readstatus = wl_module_get_data((void*)&wl_data);
+            uint8_t i;
+            lcd_puthex(readstatus);
+            lcd_putc(' ');
+            lcd_putint1(wl_data[0]);
+            lcd_putc('.');
+            for (i=2; i<5; i++)
+            {
+               lcd_putint1(wl_data[i]);
+            }
+            lcd_putc(' ');
+            lcd_puthex(wl_data[9]);
+            OSZIA_HI;
+            
+            
+            
             wl_module_config_register(STATUS, (1<<RX_DR)); //Clear Interrupt Bit
             PTX=0;
          }
          
          if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
          {
+            OSZIA_LO;
             lcd_gotoxy(3,0);
             lcd_puts("TX");
             wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
             PTX=0;
+            OSZIA_HI;
          }
          
          if (wl_status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
@@ -595,22 +618,6 @@ int main (void)
          }
        
          
-         uint8_t rec = wl_module_get_rx_pw(0);
-         lcd_gotoxy(0,3);
-         lcd_puthex(rec);
-         lcd_putc(' ');
-         uint8_t readstatus = wl_module_get_data((void*)&wl_data);
-         uint8_t i;
-         lcd_puthex(readstatus);
-         lcd_putc(' ');
-         lcd_putint1(wl_data[0]);
-         lcd_putc('.');
-         for (i=2; i<5; i++)
-         {
-            lcd_putint1(wl_data[i]);
-         }
-         lcd_putc(' ');
-         lcd_puthex(wl_data[9]);
          
       } // end ISR abarbeiten
 
