@@ -53,6 +53,8 @@ void wl_module_init()
    INTERRUPT_DDR &= ~(1<<INT0_PIN);
    INTERRUPT_PORT |= (1<<INT0_PIN);
    
+   
+   
    wl_module_CE_lo;
    wl_module_CSN_hi;
    
