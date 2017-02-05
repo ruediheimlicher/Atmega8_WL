@@ -499,12 +499,12 @@ void wl_module_send(uint8_t * value, uint8_t len)
 // Sends a data package to the default address. Be sure to send the correct
 // amount of bytes as configured as payload on the receiver.
 {
-   lcd_clr_line(3);
-   lcd_gotoxy(3,3);
-   lcd_putc('b');
+   //lcd_clr_line(3);
+   //lcd_gotoxy(3,3);
+   //lcd_putc('b');
    
-   lcd_puthex(PTX);
-   lcd_putc(' ');
+   //lcd_puthex(PTX);
+   //lcd_putc(' ');
    //return;
    while (PTX)
    {
