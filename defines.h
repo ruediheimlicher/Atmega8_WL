@@ -20,9 +20,9 @@
 
 
 //Oszi
-#define OSZIPORT           PORTD
-#define OSZIDDR            DDRD
-#define PULSA              4
+#define OSZIPORT           PORTC
+#define OSZIDDR            DDRC
+#define PULSA              3
 //#define OSZI_PULS_B        5
 #define OSZIA_LO OSZIPORT &= ~(1<<PULSA)
 #define OSZIA_HI OSZIPORT |= (1<<PULSA)
@@ -39,9 +39,6 @@
 #define SPI_CLK            PB5
 #define SPI_SS             PB2
 
-#define OSZIA_LO OSZIPORT &= ~(1<<PULSA)
-#define OSZIA_HI OSZIPORT |= (1<<PULSA)
-#define OSZIA_TOGG OSZIPORT ^= (1<<PULSA)
 
 // Port fuer INT0
 #define INTERRUPT_PORT   PORTD
@@ -54,5 +51,5 @@
 #define SPI_WL_PORT     PORTC
 #define SPI_WL_DDR      DDRC
 #define SPI_WL_CE       PC0
-#define SPI_WL_CSN       PC1
+#define SPI_WL_CSN      PC1
 

@@ -605,6 +605,7 @@ int main (void)
          lcd_putc(' ');
          lcd_putint1(wl_data[0]);
          lcd_putc('.');
+         
          for (i=2; i<5; i++)
          {
             lcd_putint1(wl_data[i]);
@@ -670,7 +671,7 @@ int main (void)
             //lcd_putc('a');
             /*
             wl_module_tx_config(0);
-            
+             
             wl_module_send(payload,wl_module_PAYLOAD);
             lcd_putc('G');
             
@@ -690,7 +691,7 @@ int main (void)
             PTX=0;
              
              */
-//            wl_module_rx_config();
+      //      wl_module_rx_config();
             //lcd_gotoxy(0,3);
             
             //lcd_puthex(maincounter);

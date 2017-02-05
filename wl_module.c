@@ -178,6 +178,7 @@ extern void wl_module_tx_config(uint8_t tx_nr)
                tx_addr[0] = tx_addr[1] = tx_addr[2] = tx_addr[3] = tx_addr[4] = RX_ADDR_P0_B0_DEFAULT_VAL;
                wl_module_set_TADDR(tx_addr);
                wl_module_set_RADDR(tx_addr);
+               
                break;
             case 1: //setup TX address as default RX address for pipe 1 (C2:C2:C2:C2:C2)
                tx_addr[0] = tx_addr[1] = tx_addr[2] = tx_addr[3] = tx_addr[4] = RX_ADDR_P1_B0_DEFAULT_VAL;
@@ -499,12 +500,12 @@ void wl_module_send(uint8_t * value, uint8_t len)
 // Sends a data package to the default address. Be sure to send the correct
 // amount of bytes as configured as payload on the receiver.
 {
-   lcd_clr_line(3);
-   lcd_gotoxy(3,3);
-   lcd_putc('b');
+  // lcd_clr_line(3);
+   lcd_gotoxy(10,2);
+  lcd_putc('*');
    
    lcd_puthex(PTX);
-   lcd_putc(' ');
+   lcd_putc('*');
    //return;
    while (PTX)
    {
