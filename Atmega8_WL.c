@@ -687,13 +687,7 @@ int main (void)
                 lcd_putc('c');
                
                
-                wl_module_CSN_lo;
-                _delay_us(10);
-                // Pull down chip select
-                uint8_t tx_status = spi_fast_shift(NOP);// Read status register
-                
-                _delay_us(10);
-                wl_module_CSN_hi;                               // Pull up chip select
+               uint8_t tx_status = wl_module_get_status();
                lcd_putc(' ');
                lcd_puthex(tx_status);
                lcd_putc(' ');
