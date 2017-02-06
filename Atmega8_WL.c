@@ -567,7 +567,7 @@ int main (void)
          wl_status = wl_module_get_status();
          
          lcd_gotoxy(0,0);
-         lcd_puts("          ");
+         //lcd_puts("          ");
          if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
          {
             OSZIA_LO;
