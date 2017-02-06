@@ -60,7 +60,7 @@ void wl_module_init()
    
 #if defined(__AVR_ATmega8__)
    // Initialize external interrupt 0 (PD2)
-   MCUCR = ((1<<ISC11)|(0<<ISC10)|(1<<ISC01)|(0<<ISC00));	// Set external interupt on falling edge
+   MCUCR = ((1<<ISC11));	// Set external interupt on falling edge
    GICR  = ((0<<INT1)|(1<<INT0));							// Activate INT0
 #endif // __AVR_ATmega8__
    

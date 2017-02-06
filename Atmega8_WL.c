@@ -664,8 +664,6 @@ int main (void)
             if (wl_spi_status & (1<<6))
             {
                wl_spi_status &= ~(1<<6);
-               //payload[8] = 8;
-               //payload[9] = 1;
                /*
                 wl_module_CE_lo;
                 _delay_ms(5);
@@ -683,20 +681,20 @@ int main (void)
                wl_module_tx_config(0);
                lcd_putc('b');
                
-                wl_module_send(payload,wl_module_PAYLOAD);
-                lcd_putc('c');
+               wl_module_send(payload,wl_module_PAYLOAD);
+               lcd_putc('c');
                
                
                uint8_t tx_status = wl_module_get_status();
                lcd_putc(' ');
                lcd_puthex(tx_status);
                lcd_putc(' ');
-                lcd_puthex(sendcounter);
-                
-                
-                maincounter++;
-                PTX=0;
-                /*
+               lcd_puthex(sendcounter);
+               
+               
+               maincounter++;
+               PTX=0;
+               /*
                 */
                wl_module_rx_config();
                
