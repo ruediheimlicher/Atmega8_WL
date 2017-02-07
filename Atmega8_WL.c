@@ -101,7 +101,6 @@ volatile uint8_t spi_status=0;
 volatile uint8_t wl_status=0;
 volatile uint8_t PTX=0;
 volatile uint8_t int0counter=0;
-volatile uint8_t sendcounter=0;
 volatile uint8_t wl_spi_status;
 char itoabuffer[20];
 volatile uint8_t wl_data[wl_module_PAYLOAD] = {};
@@ -567,7 +566,7 @@ int main (void)
          wl_status = wl_module_get_status();
          
          lcd_gotoxy(0,0);
-         //lcd_puts("          ");
+         lcd_puts("          ");
          if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
          {
             OSZIA_LO;
@@ -598,7 +597,6 @@ int main (void)
          if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
          {
             OSZIA_LO;
-            sendcounter++;
             lcd_gotoxy(3,0);
             lcd_puts("TX");
             wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
@@ -664,6 +662,8 @@ int main (void)
             if (wl_spi_status & (1<<6))
             {
                wl_spi_status &= ~(1<<6);
+               //payload[8] = 8;
+               //payload[9] = 1;
                /*
                 wl_module_CE_lo;
                 _delay_ms(5);
@@ -674,27 +674,31 @@ int main (void)
                 wl_module_CE_hi;
                 */
                
-               lcd_gotoxy(0,1);
+               lcd_gotoxy(6,1);
                
                lcd_putc('a');
                
                wl_module_tx_config(0);
                lcd_putc('b');
                
-               wl_module_send(payload,wl_module_PAYLOAD);
-               lcd_putc('c');
+                wl_module_send(payload,wl_module_PAYLOAD);
+                lcd_putc('c');
+                
                
-               
-               uint8_t tx_status = wl_module_get_status();
-               lcd_putc(' ');
-               lcd_puthex(tx_status);
-               lcd_putc(' ');
-               lcd_puthex(sendcounter);
-               
-               
-               maincounter++;
-               PTX=0;
-               /*
+                wl_module_CSN_lo;
+                _delay_us(10);
+                // Pull down chip select
+                uint8_t tx_status = spi_fast_shift(NOP);// Read status register
+                
+                _delay_us(10);
+                wl_module_CSN_hi;                               // Pull up chip select
+                lcd_puthex(tx_status);
+                
+                
+                
+                maincounter++;
+                PTX=0;
+                /*
                 */
                wl_module_rx_config();
                
