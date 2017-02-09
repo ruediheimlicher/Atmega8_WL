@@ -627,7 +627,7 @@ int main (void)
 			
 			loopCount1++;
 
-			if ((loopCount1 >0x002F) )//&& (!(Programmstatus & (1<<MANUELL))))
+			if ((loopCount1 >0x008F) )//&& (!(Programmstatus & (1<<MANUELL))))
 			{
             LOOPLED_PORT ^= (1<<LOOPLED_PIN);
             // WL-Routinen
@@ -711,8 +711,8 @@ int main (void)
             
             loopCount2++;
             
-            //lcd_gotoxy(18,0);
-            //lcd_puthex(loopCount2);
+            lcd_gotoxy(18,0);
+            lcd_puthex(loopCount2);
  
             loopCount1=0;
             wl_status=0;
