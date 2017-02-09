@@ -621,7 +621,7 @@ int main (void)
          
       } // end ISR abarbeiten
 
-      
+
 		if (loopCount0 >=0xFE)
 		{
 			
@@ -673,7 +673,7 @@ int main (void)
                 _delay_ms(5);
                 wl_module_CE_hi;
                 */
-               
+             
                lcd_gotoxy(0,1);
                
                lcd_putc('a');
