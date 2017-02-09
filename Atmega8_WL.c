@@ -711,11 +711,11 @@ int main (void)
             
             loopCount2++;
             
-            //lcd_gotoxy(18,0);
-            //lcd_puthex(loopCount2);
+            lcd_gotoxy(18,0);
+            lcd_puthex(loopCount2);
  
             loopCount1=0;
-            wl_status=0;
+            //wl_status=0;
 				// DS1820 loop-stuff begin
             /*
 				start_temp_meas();
@@ -792,6 +792,9 @@ int main (void)
 			
 			loopCount0 =0;
 		}
+      
+      // ***
+       // ***
       
       /*
 		if (!(PINB & (1<<PB0))) // Taste 0
