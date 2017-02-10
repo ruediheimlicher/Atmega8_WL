@@ -18,6 +18,8 @@
 #define LOOPLED_DDR	DDRD
 #define LOOPLED_PIN	4
 
+#define ADCPORT   PORTC
+#define ADCDDR   DDRC
 
 //Oszi
 #define OSZIPORT           PORTC

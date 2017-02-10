@@ -322,7 +322,7 @@ void SPI_Master_init (void)
    wl_spi_status = 0;
 }
 
-void slaveinit(void)
+void deviceinit(void)
 {
 //	MANUELL_DDR |= (1<<MANUELLPIN);		//Pin 5 von PORT D als Ausgang fuer Manuell
 	//MANUELL_PORT &= ~(1<<MANUELLPIN);
@@ -334,7 +334,8 @@ void slaveinit(void)
    OSZIDDR |= (1<<PULSA);	//Pin 0 von  als Ausgang fuer OSZI
    OSZIPORT |= (1<<PULSA);		// HI
    
-
+   ADCDDR &= ~(1<<PORTC2);
+   ADCPORT &= ~(1<<PORTC2);
 	
 
 	DDRB |= (1<<PORTB1);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
@@ -489,7 +490,7 @@ int main (void)
 //	LCD_DDR |=(1<<LCD_ENABLE_PIN);
 //	LCD_DDR |=(1<<LCD_CLOCK_PIN);
 	
-	slaveinit();
+	deviceinit();
 	
    SPI_Init();
    SPI_Master_init();
@@ -532,6 +533,7 @@ int main (void)
    PORTC &= ~(1<<1);
    */
    timer1();
+   initADC(0);
    
    uint8_t delaycount=10;
   #pragma mark while
@@ -643,7 +645,7 @@ int main (void)
 			
 			loopCount1++;
 
-			if ((loopCount1 >0x002F) )//&& (!(Programmstatus & (1<<MANUELL))))
+			if ((loopCount1 >0x00AF) )//&& (!(Programmstatus & (1<<MANUELL))))
 			{
             LOOPLED_PORT ^= (1<<LOOPLED_PIN);
             // WL-Routinen
@@ -661,6 +663,9 @@ int main (void)
              */
             
             
+            uint16_t adcwert = readKanal(2);
+            lcd_gotoxy(10,0);
+            lcd_putint12(adcwert);
             
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
@@ -676,6 +681,9 @@ int main (void)
             payload[5] = 1;
             payload[6] = 8;
             payload[7] = 2;
+            
+            payload[10] = adcwert & 0x00FF;
+            payload[11] = (adcwert & 0xFF00)>>8;
             
             if (wl_spi_status & (1<<6))
             {
@@ -727,8 +735,8 @@ int main (void)
             
             loopCount2++;
             
-            lcd_gotoxy(18,0);
-            lcd_puthex(loopCount2);
+            //lcd_gotoxy(18,0);
+            //lcd_puthex(loopCount2);
  
             loopCount1=0;
             //wl_status=0;

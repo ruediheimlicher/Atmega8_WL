@@ -23,10 +23,7 @@ struct adcwert16 readKanal16Bit(uint8_t kanal)
   tempWert.wert8H=0;
   ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS0);    // Frequenzvorteiler auf 32 setzen und ADC aktivieren 
  
-  ADMUX = kanal;                      // Ÿbergebenen Kanal waehlen
-//  ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung nutzen 
-  ADMUX |=  (1<<REFS0); // VCC als Referenzspannung nutzen 
- 
+ADMUX = ADC_REF_INTERNAL | (kanal & 0x1F);
   /* nach Aktivieren des ADC wird ein "Dummy-Readout" empfohlen, man liest
      also einen Wert und verwirft diesen, um den ADC "warmlaufen zu lassen" */
   ADCSRA |= (1<<ADSC);              // eine ADC-Wandlung (Der ADC setzt dieses Bit ja wieder auf 0 nach dem Wandeln)
@@ -51,22 +48,18 @@ struct adcwert16 readKanal16Bit(uint8_t kanal)
 
 void initADC(uint8_t derKanal)
 {
-   ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS0);    // Frequenzvorteiler auf 32 setzen und ADC aktivieren 
- 
-  ADMUX = derKanal;                      // Ÿbergebenen Kanal waehlen
-
-	//ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung nutzen 
-  //if (test)
-  {
-  //ADMUX |= (1<<REFS0); // VCC als Referenzspannung nutzen 
-  }
- 
-  /* nach Aktivieren des ADC wird ein "Dummy-Readout" empfohlen, man liest
-     also einen Wert und verwirft diesen, um den ADC "warmlaufen zu lassen" */
-  ADCSRA |= (1<<ADSC);              // eine ADC-Wandlung (Der ADC setzt dieses Bit ja wieder auf 0 nach dem Wandeln)
-  while ( ADCSRA & (1<<ADSC) ) {
-     ;     // auf Abschluss der Wandlung warten 
-  }
+   //ADCSRA = (1<<ADEN) |(1<<ADPS2) | (1<<ADPS0);
+   ADCSRA = (1<<ADEN) | ADC_PRESCALER;       // Frequenzvorteiler auf 32 setzen und ADC aktivieren
+   
+   ADMUX = ADC_REF_INTERNAL;// | (derKanal & 0x1F); // configure mux input und Ÿbergebenen Kanal waehlen
+   
+   /* nach Aktivieren des ADC wird ein "Dummy-Readout" empfohlen, man liest
+    also einen Wert und verwirft diesen, um den ADC "warmlaufen zu lassen" */
+   ADCSRA |= (1<<ADSC);              // eine ADC-Wandlung (Der ADC setzt dieses Bit ja wieder auf 0 nach dem Wandeln)
+   while ( ADCSRA & (1<<ADSC) )
+   {
+      ;     // auf Abschluss der Wandlung warten
+   }
 }
 
 uint16_t readKanal(uint8_t derKanal) //Unsere Funktion zum ADC-Channel aus lesen
@@ -75,7 +68,7 @@ uint16_t readKanal(uint8_t derKanal) //Unsere Funktion zum ADC-Channel aus lesen
   uint16_t result = 0;         //Initialisieren wichtig, da lokale Variablen
                                //nicht automatisch initialisiert werden und
                                //zufŠllige Werte haben. Sonst kann Quatsch rauskommen
- ADMUX = derKanal; 
+ ADMUX = ADC_REF_INTERNAL | (derKanal & 0x1F);
   // Eigentliche Messung - Mittelwert aus 4 aufeinanderfolgenden Wandlungen
   for(i=0;i<4;i++)
   {
@@ -106,10 +99,8 @@ uint16_t readKanalOrig(uint8_t derKanal, uint8_t num) //Unsere Funktion zum ADC-
  
    ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS0);    // Frequenzvorteiler auf 32 setzen und ADC aktivieren 
  
-  ADMUX = derKanal;                      // Ÿbergebenen Kanal waehlen
-//  ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung nutzen 
-//  ADMUX |= (1<<REFS0); // VCC als Referenzspannung nutzen 
- 
+ADMUX = ADC_REF_INTERNAL | (derKanal & 0x1F);//
+   
   /* nach Aktivieren des ADC wird ein "Dummy-Readout" empfohlen, man liest
      also einen Wert und verwirft diesen, um den ADC "warmlaufen zu lassen" */
   ADCSRA |= (1<<ADSC);              // eine ADC-Wandlung (Der ADC setzt dieses Bit ja wieder auf 0 nach dem Wandeln)
