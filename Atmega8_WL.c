@@ -589,6 +589,14 @@ int main (void)
             }
             lcd_putc(' ');
             lcd_puthex(wl_data[9]);
+
+            lcd_putc(' ');
+            uint16_t temperatur = (wl_data[11]<<8);
+            temperatur |= wl_data[10];
+            lcd_putint12(temperatur);
+
+            
+            
             OSZIA_HI;
             
             wl_spi_status |= (1<<6);
