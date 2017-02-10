@@ -562,8 +562,8 @@ int main (void)
          
          wl_spi_status &= ~(1<<7);
          
-         lcd_gotoxy(14,1);
-         lcd_puthex(int0counter);
+         //lcd_gotoxy(14,1);
+         //lcd_puthex(int0counter);
          lcd_gotoxy(18,1);
          lcd_puthex(wl_status);
 // MARK: WL Loop
@@ -580,15 +580,17 @@ int main (void)
          //lcd_puts("          ");
          if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
          {
-            OSZIA_LO;
+            //OSZIA_LO;
             lcd_gotoxy(0,0);
             lcd_puts("RX");
             uint8_t rec = wl_module_get_rx_pw(0);
-            lcd_gotoxy(0,3);
-            lcd_puthex(rec);
-            lcd_putc(' ');
+            //lcd_gotoxy(0,3);
+            //lcd_puthex(rec);
+            //lcd_putc(' ');
             uint8_t readstatus = wl_module_get_data((void*)&wl_data);
             uint8_t i;
+            lcd_gotoxy(0,3);
+            lcd_puts("rs:");
             lcd_puthex(readstatus);
             lcd_putc(' ');
             lcd_putint1(wl_data[0]);
@@ -598,13 +600,23 @@ int main (void)
                lcd_putint1(wl_data[i]);
             }
             lcd_putc(' ');
-            lcd_puthex(wl_data[9]);
+                     
+           
 
             lcd_putc(' ');
             uint16_t temperatur = (wl_data[11]<<8);
             temperatur |= wl_data[10];
-            lcd_putint12(temperatur);
+            //lcd_putint12(temperatur);
+            
+            temperatur /=4; // *256/1024, unkalibriert
+            lcd_putint2(temperatur/10);
+            lcd_putc('.');
+            lcd_putint1(temperatur%10);
 
+            //lcd_put_tempbis99(temperatur);
+
+            lcd_gotoxy(18,3);
+            lcd_puthex(wl_data[9]);
             pwmpos = temperatur;
             OCR1A = temperatur;
             OSZIA_HI;
@@ -615,13 +627,13 @@ int main (void)
          
          if (wl_status & (1<<TX_DS)) // IRQ: Package has been sent
          {
-            OSZIA_LO;
+            //OSZIA_LO; // 50 ms mit Anzeige, 140us ohne Anzeige
             sendcounter++;
-            lcd_gotoxy(3,0);
-            lcd_puts("TX");
+       //     lcd_gotoxy(3,0);
+       //     lcd_puts("TX");
             wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
             PTX=0;
-            OSZIA_HI;
+            //OSZIA_HI;
          }
          
          if (wl_status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
@@ -665,7 +677,13 @@ int main (void)
             
             uint16_t adcwert = readKanal(2);
             lcd_gotoxy(10,0);
-            lcd_putint12(adcwert);
+            //lcd_putint12(adcwert);
+            uint16_t temperatur =  adcwert*10/4; // *256/1024, unkalibriert
+            lcd_putint2(temperatur/10);
+            lcd_putc('.');
+            lcd_putint1(temperatur%10);
+           
+            
             
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
@@ -688,38 +706,24 @@ int main (void)
             if (wl_spi_status & (1<<6))
             {
                wl_spi_status &= ~(1<<6);
-               /*
-                wl_module_CE_lo;
-                _delay_ms(5);
-                wl_module_CSN_lo;
-                _delay_ms(5);
-                wl_module_CSN_hi;
-                _delay_ms(5);
-                wl_module_CE_hi;
-                */
-             
-               lcd_gotoxy(0,1);
-               
-               lcd_putc('a');
                
                wl_module_tx_config(0);
-               lcd_putc('b');
+               //lcd_putc('b');
                
                wl_module_send(payload,wl_module_PAYLOAD);
-               lcd_putc('c');
-               
+               //lcd_putc('c');
                
                uint8_t tx_status = wl_module_get_status();
-               lcd_putc(' ');
+               
+               lcd_gotoxy(0,1);
+               //lcd_putc(' ');
                lcd_puthex(tx_status);
                lcd_putc(' ');
                lcd_puthex(sendcounter);
                
-               
                maincounter++;
                PTX=0;
-               /*
-                */
+
                wl_module_rx_config();
                
             } // if
