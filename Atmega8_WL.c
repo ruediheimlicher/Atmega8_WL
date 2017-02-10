@@ -35,6 +35,8 @@ uint16_t loopCount0=0;
 uint16_t loopCount1=0;
 uint16_t loopCount2=0;
 
+uint16_t pwmpos=0;
+
 #define PROGRAMM_DS	0
 #define GRUPPE_DS		0xC0
 //#define GRUPPE_DS	0xB0
@@ -335,7 +337,7 @@ void slaveinit(void)
 
 	
 
-	DDRB |= (1<<PORTB1);	//Bit 1 von PORT B als Ausgang fuer PWM
+	DDRB |= (1<<PORTB1);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
 	PORTB &= ~(1<<PORTB1);	//LO
 	
 
@@ -413,8 +415,8 @@ void SPI_Init(void)
    // Enable SPI, Master, set clock rate fck/16 
    SPCR =   (1<<SPE)|
             (1<<MSTR)|
-            (1<<SPR0)|
-            (1<<SPR1);
+   (1<<SPR0);//|
+            //(1<<SPR1);
    
    /*
     Slave init
@@ -426,48 +428,51 @@ void SPI_Init(void)
    
 }
 
+#pragma mark timer1
+void timer1(void)
+{
+   
+   //SERVODDR |= (1<<SERVOPIN0);
+   /*
+    TCCR1A = (1<<WGM10)|(1<<COM1A1)   // Set up the two Control registers of Timer1.
+    |(1<<COM1B1);             // Wave Form Generation is Fast PWM 8 Bit,
+    TCCR1B = (1<<WGM12)|(1<<CS12)     // OC1A and OC1B are cleared on compare match
+    |(1<<CS10);               // and set at BOTTOM. Clock Prescaler is 1024.
+    
+    OCR1A = 63;                       // Dutycycle of OC1A = 25%
+    //OCR1B = 127;                      // Dutycycle of OC1B = 50%
+    
+    return;
+    */
+   // https://www.mikrocontroller.net/topic/83609
+   
+   
+   OCR1A = 0x3E8;           // Pulsdauer 1ms
+   OCR1A = 0x200;
+   //OCR1A = Servoposition[2];
+   //OCR1B = 0x0FFF;
+   ICR1 = 0x6400;          // 0x6400: Pulsabstand 50 ms
+   // http://www.ledstyles.de/index.php/Thread/18214-ATmega32U4-Schaltungen-PWM/
+   DDRB |= (1<<PB1);
+   
+   TCCR1A |= (1<<COM1A1)|(1<<COM1B1)|(1<<WGM10);
+   
+   TCCR1B |= (1<<WGM12)|(1<<CS11);
+   //   TCCR1A=0xAA;
+   //   TCCR1B=0x19;
+   // TCCR1B |= (1<<CS10);
+   
+   
+   
+   //  TIMSK |= (1<<OCIE1A) | (1<<TICIE1); // OC1A Int enablad
+}
+
+
 #pragma mark INT0 WL
 ISR(INT0_vect)
 {
    wl_spi_status |= (1<<7);
-   /*
-   uint8_t status;
-   // Read wl_module status
    
-   
-   wl_module_CSN_lo;
-   _delay_us(10);
-
-   status = spi_fast_shift(NOP);
-   _delay_us(10);
-
-   wl_status = status;
-   wl_module_CSN_hi;
-   // Pull down chip select
-   // Read status register
-   // Pull up chip select
-
-   if (status & (1<<TX_DS)) // IRQ: Package has been sent
-   {
-      wl_module_config_register(STATUS, (1<<TX_DS)); //Clear Interrupt Bit
-      PTX=0;
-   }
-   
-   if (status & (1<<MAX_RT)) // IRQ: Package has not been sent, send again
-   {
-      wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
-      wl_module_CE_hi;
-      _delay_us(10);
-      wl_module_CE_lo;
-   }
-   
-   if (status & (1<<TX_FULL))            //TX_FIFO Full <-- this is not an IRQ
-   {
-      wl_module_CSN_lo;                // Pull down chip select
-      spi_fast_shift(FLUSH_TX);        // Flush TX-FIFO
-      wl_module_CSN_hi;                // Pull up chip select
-   }
-   */
 }
 
 ISR (SPI_STC_vect)
@@ -526,10 +531,13 @@ int main (void)
    PORTC |= (1<<0);
    PORTC &= ~(1<<1);
    */
+   timer1();
+   
    uint8_t delaycount=10;
   #pragma mark while
    uint8_t readstatus = wl_module_get_data((void*)&wl_data);
    //lcd_puts(" los");
+   sei();
    while (1)
 	{
     //  PORTC |= (1<<0);
@@ -595,8 +603,8 @@ int main (void)
             temperatur |= wl_data[10];
             lcd_putint12(temperatur);
 
-            
-            
+            pwmpos = temperatur;
+            OCR1A = temperatur;
             OSZIA_HI;
             
             wl_spi_status |= (1<<6);
