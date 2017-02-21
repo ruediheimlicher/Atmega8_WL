@@ -336,6 +336,8 @@ void deviceinit(void)
    
    ADCDDR &= ~(1<<PORTC2);
    ADCPORT &= ~(1<<PORTC2);
+   ADCDDR &= ~(1<<PORTC3);
+   ADCPORT &= ~(1<<PORTC3);
 	
 
 	DDRB |= (1<<PORTB1);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
@@ -589,29 +591,25 @@ int main (void)
             //lcd_putc(' ');
             uint8_t readstatus = wl_module_get_data((void*)&wl_data);
             uint8_t i;
-            lcd_gotoxy(0,3);
+            lcd_gotoxy(4,0);
             lcd_puts("rs:");
             lcd_puthex(readstatus);
             lcd_putc(' ');
             lcd_putint1(wl_data[0]);
             lcd_putc('.');
-            for (i=2; i<5; i++)
+            for (i=2; i<4; i++)
             {
                lcd_putint1(wl_data[i]);
             }
-            lcd_putc(' ');
-                     
-           
-
-            lcd_putc(' ');
+            //lcd_putc(' ');
             uint16_t temperatur = (wl_data[11]<<8);
             temperatur |= wl_data[10];
             //lcd_putint12(temperatur);
             
             temperatur /=4; // *256/1024, unkalibriert
-            lcd_putint2(temperatur/10);
-            lcd_putc('.');
-            lcd_putint1(temperatur%10);
+        //    lcd_putint2(temperatur/10);
+        //    lcd_putc('.');
+        //   lcd_putint1(temperatur%10);
 
             //lcd_put_tempbis99(temperatur);
 
@@ -675,15 +673,37 @@ int main (void)
              */
             
             
-            uint16_t adcwert = readKanal(2);
-            lcd_gotoxy(10,0);
-            //lcd_putint12(adcwert);
-            uint16_t temperatur =  adcwert*10/4; // *256/1024, unkalibriert
-            lcd_putint2(temperatur/10);
-            lcd_putc('.');
-            lcd_putint1(temperatur%10);
-           
+            uint16_t adc2wert = readKanal(2);
             
+            lcd_gotoxy(0,3);
+            lcd_puthex(adc2wert&0x00FF);
+            lcd_puthex((adc2wert&0xFF00)>>8);
+            lcd_gotoxy(6,3);
+            lcd_putint12(adc2wert);
+
+            lcd_gotoxy(12,3);
+            //lcd_putint12(adcwert);
+            uint16_t temperatur2 =  adc2wert*10/4; // *256/1024, unkalibriert
+            lcd_putint(temperatur2/10);
+            lcd_putc('.');
+            lcd_putint1(temperatur2%10);
+           
+ 
+            
+            uint16_t adc3wert = readKanal(3);
+            lcd_gotoxy(0,2);
+            lcd_puthex(adc3wert&0x00FF);
+            lcd_puthex((adc3wert&0xFF00)>>8);
+
+            lcd_gotoxy(6,2);
+            lcd_putint12(adc3wert);
+            lcd_gotoxy(12,2);
+            //lcd_putint12(adcwert);
+            uint16_t temperatur3 =  adc3wert*10/4; // *256/1024, unkalibriert
+            lcd_putint(temperatur3/10);
+            lcd_putc('.');
+            lcd_putint1(temperatur3%10);
+
             
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
@@ -700,8 +720,11 @@ int main (void)
             payload[6] = 8;
             payload[7] = 2;
             
-            payload[10] = adcwert & 0x00FF;
-            payload[11] = (adcwert & 0xFF00)>>8;
+            payload[10] = adc2wert & 0x00FF;
+            payload[11] = (adc2wert & 0xFF00)>>8;
+ 
+            payload[12] = adc3wert & 0x00FF;
+            payload[13] = (adc3wert & 0xFF00)>>8;
             
             if (wl_spi_status & (1<<6))
             {

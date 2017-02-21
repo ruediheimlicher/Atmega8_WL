@@ -73,7 +73,8 @@ uint16_t readKanal(uint8_t derKanal) //Unsere Funktion zum ADC-Channel aus lesen
   for(i=0;i<4;i++)
   {
     ADCSRA |= (1<<ADSC);            // eine Wandlung
-    while ( ADCSRA & (1<<ADSC) ) {
+    while ( ADCSRA & (1<<ADSC) )
+    {
       ;     // auf Abschluss der Wandlung warten 
     }
     result += ADCW;            // Wandlungsergebnisse aufaddieren
@@ -99,7 +100,7 @@ uint16_t readKanalOrig(uint8_t derKanal, uint8_t num) //Unsere Funktion zum ADC-
  
    ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS0);    // Frequenzvorteiler auf 32 setzen und ADC aktivieren 
  
-ADMUX = ADC_REF_INTERNAL | (derKanal & 0x1F);//
+   ADMUX = ADC_REF_INTERNAL | (derKanal & 0x1F);//
    
   /* nach Aktivieren des ADC wird ein "Dummy-Readout" empfohlen, man liest
      also einen Wert und verwirft diesen, um den ADC "warmlaufen zu lassen" */
