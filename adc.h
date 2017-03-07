@@ -33,6 +33,7 @@ struct adcwert16 {
 
 extern struct adcwert16 ADCWert16;
 
+volatile uint8_t VREF_Quelle = 0;
 struct adcwert16 readKanal16Bit(uint8_t kanal);
 void closeADC(void);
 uint16_t readKanal(uint8_t derKanal);//Unsere Funktion zum ADC-Channel aus lesen

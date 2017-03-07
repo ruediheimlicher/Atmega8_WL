@@ -11,7 +11,7 @@
 #include <avr/io.h>
 #include <avr/delay.h>
 #include <avr/interrupt.h>
-//#include <avr/pgmspace.h>
+#include <avr/pgmspace.h>
 #include <string.h>
 #include <inttypes.h>
 //#define F_CPU 4000000UL  // 4 MHz
@@ -29,6 +29,34 @@
 #include "wl_module.h" 
 #include "nRF24L01.h"
 
+// lookup-Tabelle KTY84
+
+// pgm_read_word(&KTY[xy])
+#define KTY_OFFSET   30             // Offset, Start bei bei -32 °C
+#define ADC_OFFSET   207            // Startwert der ADC-Messung
+#define KTY_FAKTOR   96             // 0x60, Multiplikator
+const uint16_t KTY[] PROGMEM =
+{
+   0x1D,	0x1FC,	0x3E8,	0x5B2,	0x789,	0x942,	0xB08,	0xCB2,
+   0xE6A,	0x1007,	0x11B4,	0x1346,	0x14E8,	0x1672,	0x180B,	0x198D,
+   0x1B1E,	0x1C9A,	0x1E24,	0x1F9A,	0x211F,	0x228F,	0x23FD,	0x257B,
+   0x26E5,	0x285F,	0x29C6,	0x2B3D,	0x2CA0,	0x2E14,	0x2F75,	0x30E7,
+   0x3246,	0x33B5,	0x3513,	0x3681,	0x37DD,	0x394A,	0x3AA5,	0x3C11,
+   0x3D6B,	0x3ED7,	0x4031,	0x419C,	0x42F6,	0x4461,	0x45BB,	0x4716,
+   0x4882,	0x49DD,	0x4B49,	0x4CA5,	0x4E13,	0x4F70,	0x50DE,	0x523D,
+   0x53AD,	0x550C,	0x567F,	0x57E0,	0x5954,	0x5AB7,	0x5C2D,	0x5D93,
+   0x5F0B,	0x6073,	0x61EF,	0x6359,	0x64D7,	0x6645,	0x67C6,	0x6936,
+   0x6AA8,	0x6C2F,	0x6DA4,	0x6F2E,	0x70A7,	0x7235,	0x73B2,	0x7544,
+   0x76C5,	0x785C,	0x79E2,	0x7B7D,	0x7D07,	0x7EA8,	0x8037,	0x81DD,
+   0x8371,	0x851D,	0x86B6,	0x8868,	0x8A07,	0x8BBF,	0x8D65,	0x8F23,
+   0x90CF,	0x927E,	0x9447,	0x95FE,	0x97CE,	0x998B,	0x9B63,	0x9D29,
+   0x9F09,	0xA0D7,	0xA2C0,	0xA496,	0xA688,	0xA867,	0xAA63,	0xAC4C,
+   0xAE52,	0xB045,	0xB256,	0xB453,	0xB66F,	0xB877,	0xBAA0,	0xBCB3,
+   0xBEE8,	0xC109,	0xC32F,	0xC578,	0xC7AC,	0xCA04,	0xCC46,	0xCEAD,
+   0xD0FE,	0xD375,	0xD5D7,	0xD85F,	0xDAD1,	0xDD6C,	0xDFF0,	0xE29E,
+   0xE535,	0xE7F7,	0xEAA3,	0xED7B,	0xF03C,	0xF32C,	0xF604,	0xF90E,
+  
+};
 
 
 uint16_t loopCount0=0;
@@ -112,6 +140,44 @@ volatile uint8_t wl_data[wl_module_PAYLOAD] = {};
 //volatile char text[] = {'*','M','a','s','t','e','r','*'};
 char* text = "* Master *";
 
+// ACD https://www.avrprogrammers.com/howto/attiny-comparator
+// ACD https://www.avrprogrammers.com/howto/attiny-comparator
+#define COMP_PORT PORTB
+#define COMP_DDR DDRB
+
+// Pins fuer Drive der RC
+#define COMP_DRIVE_PIN_A  1
+#define COMP_DRIVE_PIN_B  2
+
+#define COMP_ADC_PORT PORTC
+#define COMP_ADC_DDR DDRC
+
+#define COMP_ADC_PIN_A  4
+#define COMP_ADC_PIN_B  5
+
+#define COMP_AIN_PORT   PORTD
+#define COMP_AIN_DDR    DDRD
+#define COMP_AIN0       6
+#define COMP_AIN1       7
+
+
+#define MULTIPLEX 1
+
+volatile uint16_t captured_value;
+volatile uint8_t captured;
+volatile uint8_t overflow=0;
+volatile uint8_t captcounter=0;
+volatile uint16_t mittelwertA[4];
+volatile uint16_t mittelwertB[4];
+volatile uint8_t mposA=0;
+volatile uint8_t mposB=0;
+volatile uint8_t adckanal=0;
+
+// end ACD
+
+// end ACD
+
+
 //#define MAXSENSORS 5
 /*
 static uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];
@@ -123,6 +189,7 @@ static volatile uint8_t sensornummer=0;
 // Code 1_wire start
 //uint8_t gSensorIDs[MAXSENSORS][OW_ROMCODE_SIZE];
 
+ 
 
 uint8_t search_sensors(void)
 {
@@ -431,29 +498,59 @@ void SPI_Init(void)
    
 }
 
+void timer1_comp(void)
+{
+   // Set pin for driving resistor low.
+   COMP_DDR |= (1<<COMP_DRIVE_PIN_A);
+   COMP_PORT &= ~(1<<COMP_DRIVE_PIN_A);
+   COMP_DDR |= (1<<COMP_DRIVE_PIN_B);
+   COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
+   
+   // Disable the digital input buffers.
+   //   DIDR = (1<<AIN1D) | (1<<AIN0D);
+   if (MULTIPLEX)
+   {
+      // ADC-Eingaenge fuer Capt
+      COMP_ADC_DDR &= ~(1<<COMP_ADC_PIN_A);
+      COMP_ADC_PORT &= ~(1<<COMP_ADC_PIN_A);
+      
+      COMP_ADC_DDR &= ~(1<<COMP_ADC_PIN_B);
+      COMP_ADC_PORT &= ~(1<<COMP_ADC_PIN_B);
+      
+      // AIN0, AIN1 Eingang
+      COMP_AIN_DDR &= ~(1<<COMP_AIN0);
+      COMP_AIN_DDR &= ~(1<<COMP_AIN1);
+      
+      
+      SFIOR |= (1<<ACME);
+      //ADMUX = 3;
+   }
+   
+   
+   //ADCSRA =0;//| = (1<<ADEN);                    // disable ADC if necessary
+   ACSR =   (1<<ACIC) | (1<<ACIS1) | (1<<ACIS0);   // Comparator enabled, no bandgap, input capture.
+   // Timer...
+   TCCR1A = 0;
+   TCCR1B =   (1<<CS10);                        // F_CPU / 1
+   //TCCR1B =  (1<<ICES1);                      // Input capture on rising edge
+   TCNT1 = 0;
+   TIMSK |= (1<<TOIE1) | (1<<TICIE1);           // Timer interrupts on capture and overflow.
+   sei();
+}
+
+
 #pragma mark timer1
+// Timer1 Servo
+/*
 void timer1(void)
 {
    
-   //SERVODDR |= (1<<SERVOPIN0);
-   /*
-    TCCR1A = (1<<WGM10)|(1<<COM1A1)   // Set up the two Control registers of Timer1.
-    |(1<<COM1B1);             // Wave Form Generation is Fast PWM 8 Bit,
-    TCCR1B = (1<<WGM12)|(1<<CS12)     // OC1A and OC1B are cleared on compare match
-    |(1<<CS10);               // and set at BOTTOM. Clock Prescaler is 1024.
-    
-    OCR1A = 63;                       // Dutycycle of OC1A = 25%
-    //OCR1B = 127;                      // Dutycycle of OC1B = 50%
-    
-    return;
-    */
    // https://www.mikrocontroller.net/topic/83609
    
    
    OCR1A = 0x3E8;           // Pulsdauer 1ms
    OCR1A = 0x200;
-   //OCR1A = Servoposition[2];
-   //OCR1B = 0x0FFF;
+ 
    ICR1 = 0x6400;          // 0x6400: Pulsabstand 50 ms
    // http://www.ledstyles.de/index.php/Thread/18214-ATmega32U4-Schaltungen-PWM/
    DDRB |= (1<<PB1);
@@ -461,13 +558,37 @@ void timer1(void)
    TCCR1A |= (1<<COM1A1)|(1<<COM1B1)|(1<<WGM10);
    
    TCCR1B |= (1<<WGM12)|(1<<CS11);
-   //   TCCR1A=0xAA;
-   //   TCCR1B=0x19;
-   // TCCR1B |= (1<<CS10);
-   
-   
    
    //  TIMSK |= (1<<OCIE1A) | (1<<TICIE1); // OC1A Int enablad
+}
+
+*/
+
+ISR(TIMER1_CAPT_vect)
+{
+   // Save the captured value and drop the drive line.
+   if (captured == 0)
+   {
+      // captured_value = ICR1;
+      captcounter++;
+      
+      if (adckanal == COMP_ADC_PIN_A)
+      {
+         mittelwertA[mposA++] = ICR1;           // Ringbuffer fuer gleitenden Mittelwert
+         mposA &= 0x03;                         // position incrementieren
+         COMP_PORT &= ~(1<<COMP_DRIVE_PIN_A);   // auf 4 beschraenken
+      }
+      
+      if (adckanal == COMP_ADC_PIN_B)
+      {
+         mittelwertB[mposB++] = ICR1;
+         mposB &= 0x03;
+         COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
+      }
+      TCNT1 = 0;
+      captured = 1;
+   }
+   //TCNT1 = 0;
 }
 
 
@@ -534,7 +655,7 @@ int main (void)
    PORTC |= (1<<0);
    PORTC &= ~(1<<1);
    */
-   timer1();
+  // timer1_comp();
    initADC(0);
    
    uint8_t delaycount=10;
@@ -672,6 +793,7 @@ int main (void)
             wl_module_CE_hi;
              */
             
+            // MARK: ADC Loop
             
             uint16_t adc2wert = readKanal(2);
             
@@ -690,20 +812,62 @@ int main (void)
            
  
             
-            uint16_t adc3wert = readKanal(3);
+            uint16_t adc3wert = readKanal(3); // KTY
             lcd_gotoxy(0,2);
-            lcd_puthex(adc3wert&0x00FF);
-            lcd_puthex((adc3wert&0xFF00)>>8);
-
-            lcd_gotoxy(6,2);
+            //lcd_puthex(adc3wert&0x00FF);
+            //lcd_puthex((adc3wert&0xFF00)>>8);
+            //lcd_gotoxy(6,2);
             lcd_putint12(adc3wert);
+         //   adc3wert-=6;
+            /*
+             #define KTY_OFFSET   30             // Offset, Start bei bei -30 °C
+             #define ADC_OFFSET   204            // Startwert der ADC-Messung
+             #define KTY_FAKTOR   96             // 0x60, Multiplikator
+             // pgm_read_word(&KTY[xy])
+             */
+            uint16_t tableindex = ((adc3wert - ADC_OFFSET)>>3); // abrunden auf Intervalltakt
+            lcd_putc(' ');
+           // lcd_putint(tableindex);
+            uint8_t col = (adc3wert - ADC_OFFSET) & 0x07;
+           // lcd_putc(' ');
+           //lcd_putint2(col);
+            uint16_t ktywert = pgm_read_word(&KTY[tableindex]); // Wert in Tabelle, unterer Wert
+            lcd_putint12(ktywert);
+
+            if (col) // nicht exakter wert, interpolieren
+           {
+              uint16_t diff = pgm_read_word(&KTY[tableindex+1])-ktywert;
+              //diff = (diff * col)<<3;
+              ktywert += (diff * col)>>3;
+           }
+            
+            lcd_putc(' ');
+            lcd_putint12((ktywert));
+
+            lcd_putc(' ');
+            lcd_putint12((ktywert/KTY_FAKTOR)-KTY_OFFSET);
+
+            
+//            lcd_putc(' ');
+//            uint16_t diff = pgm_read_word(&KTY[tableindex+1])-ktywert;
+//            diff = (diff * col)>>3;
+
+//            lcd_putint12(diff);
+           
+           // lcd_gotoxy(6,2);
+            //lcd_puthex((ktywert & 0xFF00)>>8);
+           // lcd_puthex(ktywert & 0x00FF);
+           // lcd_putc(' ');
+           // lcd_putint12(adc3wert - ADC_OFFSET);
+           // lcd_putint12(ktywert);
+            /*
             lcd_gotoxy(12,2);
             //lcd_putint12(adcwert);
             uint16_t temperatur3 =  adc3wert*10/4; // *256/1024, unkalibriert
             lcd_putint(temperatur3/10);
             lcd_putc('.');
             lcd_putint1(temperatur3%10);
-
+*/
             
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
@@ -723,8 +887,10 @@ int main (void)
             payload[10] = adc2wert & 0x00FF;
             payload[11] = (adc2wert & 0xFF00)>>8;
  
-            payload[12] = adc3wert & 0x00FF;
-            payload[13] = (adc3wert & 0xFF00)>>8;
+//            payload[12] = adc3wert & 0x00FF;
+//            payload[13] = (adc3wert & 0xFF00)>>8;
+            payload[12] = (ktywert/KTY_FAKTOR) & 0x00FF;
+            payload[13] = ((ktywert/KTY_FAKTOR) & 0xFF00)>>8;
             
             if (wl_spi_status & (1<<6))
             {

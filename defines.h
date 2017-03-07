@@ -56,5 +56,5 @@
 #define SPI_WL_PORT     PORTC
 #define SPI_WL_DDR      DDRC
 #define SPI_WL_CE       PC0
-#define SPI_WL_CSN       PC1
+#define SPI_WL_CSN      PC1
 
