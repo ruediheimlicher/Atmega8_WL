@@ -37,9 +37,9 @@
 #define LCD_DDR						DDRD
 
 
-#define LCD_RSDS_PIN            5
-#define LCD_ENABLE_PIN          6
-#define LCD_CLOCK_PIN           7
+#define LCD_RSDS_PIN            0
+#define LCD_ENABLE_PIN          1
+#define LCD_CLOCK_PIN           2
 
 
 /*

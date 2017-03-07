@@ -49,7 +49,7 @@
 #define INTERRUPT_PORT   PORTD
 #define INTERRUPT_DDR   DDRD
 
-#define INT0_PIN        PD2
+//#define INT0_PIN        PD2
 #define INT1_PIN        PD3
 
 // Port fuer Chip select

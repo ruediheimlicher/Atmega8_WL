@@ -50,9 +50,11 @@ void wl_module_init()
    SPI_WL_DDR     |= (1<<SPI_WL_CSN);	//Ausgang fuer WL-CSN
    SPI_WL_PORT    |= (1<<SPI_WL_CSN);	//HI
    
-   INTERRUPT_DDR &= ~(1<<INT0_PIN);
-   INTERRUPT_PORT |= (1<<INT0_PIN);
-   
+   //INTERRUPT_DDR &= ~(1<<INT0_PIN);
+   //INTERRUPT_PORT |= (1<<INT0_PIN);
+   INTERRUPT_DDR &= ~(1<<INT1_PIN);
+   INTERRUPT_PORT |= (1<<INT1_PIN);
+
    
    
    wl_module_CE_lo;
@@ -61,12 +63,12 @@ void wl_module_init()
 #if defined(__AVR_ATmega8__)
    // Initialize external interrupt 0 (PD2)
    MCUCR = ((1<<ISC11));	// Set external interupt on falling edge
-   GICR  = ((0<<INT1)|(1<<INT0));							// Activate INT0
+   GICR  = ((1<<INT1)|(0<<INT0));							// Activate INT0
 #endif // __AVR_ATmega8__
    
 #if defined(__AVR_ATmega88A__)
    EICRA = ((1<<ISC11)|(0<<ISC10)|(1<<ISC01)|(0<<ISC00));	// Set external interupt on falling edge for INT0 and INT1
-   EIMSK  = ((0<<INT1)|(1<<INT0));							// Activate INT0
+   EIMSK  = ((1<<INT1)|(1<<INT0));							// Activate INT0
 #endif // __AVR_ATmega88A__
    
 #if defined(__AVR_ATmega168__)
