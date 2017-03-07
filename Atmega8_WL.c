@@ -174,6 +174,16 @@ volatile uint8_t mposB=0;
 volatile uint8_t adckanal=0;
 
 // end ACD
+uint16_t floatmittel(uint16_t* werte)
+{
+   uint8_t pos=4;
+   uint16_t mittel =0;
+   while (pos--)
+   {
+      mittel += werte[pos]/4;
+   }
+   return mittel;
+}
 
 // end ACD
 
@@ -506,14 +516,15 @@ void timer1_comp(void)
    COMP_DDR |= (1<<COMP_DRIVE_PIN_B);
    COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
    
+   
    // Disable the digital input buffers.
    //   DIDR = (1<<AIN1D) | (1<<AIN0D);
-   if (MULTIPLEX)
+  // if (MULTIPLEX)
    {
       // ADC-Eingaenge fuer Capt
       COMP_ADC_DDR &= ~(1<<COMP_ADC_PIN_A);
       COMP_ADC_PORT &= ~(1<<COMP_ADC_PIN_A);
-      
+    
       COMP_ADC_DDR &= ~(1<<COMP_ADC_PIN_B);
       COMP_ADC_PORT &= ~(1<<COMP_ADC_PIN_B);
       
@@ -523,15 +534,19 @@ void timer1_comp(void)
       
       
       SFIOR |= (1<<ACME);
+      
       //ADMUX = 3;
    }
    
    
-   //ADCSRA =0;//| = (1<<ADEN);                    // disable ADC if necessary
+   ADCSRA =0;//| = (1<<ADEN);                    // disable ADC if necessary
+   
    ACSR =   (1<<ACIC) | (1<<ACIS1) | (1<<ACIS0);   // Comparator enabled, no bandgap, input capture.
    // Timer...
+   
    TCCR1A = 0;
    TCCR1B =   (1<<CS10);                        // F_CPU / 1
+   
    //TCCR1B =  (1<<ICES1);                      // Input capture on rising edge
    TCNT1 = 0;
    TIMSK |= (1<<TOIE1) | (1<<TICIE1);           // Timer interrupts on capture and overflow.
@@ -663,8 +678,9 @@ int main (void)
    PORTC |= (1<<0);
    PORTC &= ~(1<<1);
    */
-  // timer1_comp();
-   initADC(0);
+   //timer1_comp();
+   
+//   initADC(0);
    
    uint8_t delaycount=10;
   #pragma mark while
@@ -802,7 +818,7 @@ int main (void)
              */
             
             // MARK: ADC Loop
-            
+/*
             uint16_t adc2wert = readKanal(2);
             
             lcd_gotoxy(0,3);
@@ -817,8 +833,6 @@ int main (void)
             lcd_putint(temperatur2/10);
             lcd_putc('.');
             lcd_putint1(temperatur2%10);
-           
- 
             
             uint16_t adc3wert = readKanal(3); // KTY
             lcd_gotoxy(0,2);
@@ -827,12 +841,12 @@ int main (void)
             //lcd_gotoxy(6,2);
             lcd_putint12(adc3wert);
          //   adc3wert-=6;
-            /*
-             #define KTY_OFFSET   30             // Offset, Start bei bei -30 °C
-             #define ADC_OFFSET   204            // Startwert der ADC-Messung
-             #define KTY_FAKTOR   96             // 0x60, Multiplikator
+             
+            //#define KTY_OFFSET   30             // Offset, Start bei bei -30 °C
+            // #define ADC_OFFSET   204            // Startwert der ADC-Messung
+            // #define KTY_FAKTOR   96             // 0x60, Multiplikator
              // pgm_read_word(&KTY[xy])
-             */
+ 
             uint16_t tableindex = ((adc3wert - ADC_OFFSET)>>3); // abrunden auf Intervalltakt
             lcd_putc(' ');
            // lcd_putint(tableindex);
@@ -868,6 +882,7 @@ int main (void)
            // lcd_putc(' ');
            // lcd_putint12(adc3wert - ADC_OFFSET);
            // lcd_putint12(ktywert);
+ */
             /*
             lcd_gotoxy(12,2);
             //lcd_putint12(adcwert);
@@ -875,7 +890,7 @@ int main (void)
             lcd_putint(temperatur3/10);
             lcd_putc('.');
             lcd_putint1(temperatur3%10);
-*/
+             */
             
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
@@ -892,13 +907,13 @@ int main (void)
             payload[6] = 8;
             payload[7] = 2;
             
-            payload[10] = adc2wert & 0x00FF;
-            payload[11] = (adc2wert & 0xFF00)>>8;
+//            payload[10] = adc2wert & 0x00FF;
+ //           payload[11] = (adc2wert & 0xFF00)>>8;
  
 //            payload[12] = adc3wert & 0x00FF;
 //            payload[13] = (adc3wert & 0xFF00)>>8;
-            payload[12] = (ktywert/KTY_FAKTOR) & 0x00FF;
-            payload[13] = ((ktywert/KTY_FAKTOR) & 0xFF00)>>8;
+//            payload[12] = (ktywert/KTY_FAKTOR) & 0x00FF;
+//            payload[13] = ((ktywert/KTY_FAKTOR) & 0xFF00)>>8;
             
             if (wl_spi_status & (1<<6))
             {
