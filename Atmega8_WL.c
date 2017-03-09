@@ -513,9 +513,11 @@ void timer1_comp(void)
    // Set pin for driving resistor low.
    COMP_DDR |= (1<<COMP_DRIVE_PIN_A);
    COMP_PORT &= ~(1<<COMP_DRIVE_PIN_A);
-   COMP_DDR |= (1<<COMP_DRIVE_PIN_B);
-   COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
-   
+   //COMP_DDR |= (1<<COMP_DRIVE_PIN_B);
+   //COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
+   DDRB |= (1<<0); // HI fuer Spannungsteiler
+   PORTB |= (1<<0);
+
    
    // Disable the digital input buffers.
    //   DIDR = (1<<AIN1D) | (1<<AIN0D);
@@ -593,18 +595,29 @@ ISR(TIMER1_CAPT_vect)
          mposA &= 0x03;                         // position incrementieren
          COMP_PORT &= ~(1<<COMP_DRIVE_PIN_A);   // auf 4 beschraenken
       }
-      
+      /*
       if (adckanal == COMP_ADC_PIN_B)
       {
          mittelwertB[mposB++] = ICR1;
          mposB &= 0x03;
          COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
       }
+       */
       TCNT1 = 0;
       captured = 1;
    }
-   //TCNT1 = 0;
+   TCNT1 = 0;
 }
+
+ISR(TIMER1_OVF_vect)
+{
+   overflow++;
+   COMP_PORT &= ~(1<<COMP_DRIVE_PIN_A);
+  // COMP_PORT &= ~(1<<COMP_DRIVE_PIN_B);
+   // If we overflowed, the capacitor is bigger than
+   // this range supports. Use a smaller series resistor.
+}
+
 
 /*
 #pragma mark INT0 WL
@@ -678,7 +691,7 @@ int main (void)
    PORTC |= (1<<0);
    PORTC &= ~(1<<1);
    */
-   //timer1_comp();
+   timer1_comp();
    
 //   initADC(0);
    
@@ -695,7 +708,7 @@ int main (void)
 		//LOOPLED_PORT ^= (1<<LOOPLED_PIN);
       //incoming = SPDR;
       
-      if (wl_spi_status & (1<<7)) // in ISR gesetzt
+      if (wl_spi_status & (1<<7)) // in INT1-ISR gesetzt
       {
          
          if (int0counter < 0x2F)
@@ -792,6 +805,7 @@ int main (void)
        
          
          
+         
       } // end ISR abarbeiten
 
 
@@ -800,7 +814,7 @@ int main (void)
 			
 			loopCount1++;
 
-			if ((loopCount1 >0x00AF) )//&& (!(Programmstatus & (1<<MANUELL))))
+			if ((loopCount1 >0x02FF) )//&& (!(Programmstatus & (1<<MANUELL))))
 			{
             LOOPLED_PORT ^= (1<<LOOPLED_PIN);
             // WL-Routinen
@@ -891,6 +905,46 @@ int main (void)
             lcd_putc('.');
             lcd_putint1(temperatur3%10);
              */
+            
+            /* ********** */
+            //lcd_gotoxy(16,0);
+            //lcd_puthex(captcounter);
+            //lcd_gotoxy(18,0);
+            //lcd_puthex(overflow);
+             // Werte reset
+            
+            
+            
+            
+             captured_value=0;
+             captured = 0;
+             // Kanal waehlen
+             adckanal = COMP_ADC_PIN_A;
+             ADMUX = COMP_ADC_PIN_A & 0x07; // 4
+             // counter reset
+             TCNT1 = 0;
+             // Pin HI
+             COMP_PORT |= (1<<COMP_DRIVE_PIN_A);
+             while (!captured); // warten, captured wird in ISR gesetzt
+/*
+             _delay_us(100);
+
+             captured_value=0;
+             captured = 0;
+             adckanal = COMP_ADC_PIN_B;
+             
+             ADMUX = COMP_ADC_PIN_B & 0x07; // 5
+             TCNT1 = 0;
+             COMP_PORT |= (1<<COMP_DRIVE_PIN_B);
+             while (!captured);
+*/
+            lcd_gotoxy(0,2);
+            lcd_puts("A:");
+            lcd_putint16(floatmittel((void*)mittelwertA));
+            uint16_t PT_temperatur = floatmittel((void*)mittelwertA);
+
+            
+             /* ***************** */ ///////////
             
             uint8_t k;
             for (k=0; k<wl_module_PAYLOAD; k++)
