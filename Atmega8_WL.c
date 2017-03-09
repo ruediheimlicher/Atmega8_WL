@@ -419,7 +419,7 @@ void deviceinit(void)
 #if defined(__AVR_ATmega8__)
    // Initialize external interrupt 0 (PD2)
    MCUCR = ((1<<ISC11)|(0<<ISC10)|(1<<ISC01)|(0<<ISC00));	// Set external interupt on falling edge
-   GICR  = ((0<<INT1)|(1<<INT0));							// Activate INT0
+   GICR  = ((1<<INT1)|(0<<INT0));							// Activate INT1
    
    
 #endif // __AVR_ATmega8__
@@ -594,6 +594,13 @@ ISR(TIMER1_CAPT_vect)
 
 #pragma mark INT0 WL
 ISR(INT0_vect)
+{
+   wl_spi_status |= (1<<7);
+   
+}
+
+#pragma mark INT1 WL
+ISR(INT1_vect)
 {
    wl_spi_status |= (1<<7);
    
