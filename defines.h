@@ -21,11 +21,17 @@
 #define ADCPORT   PORTC
 #define ADCDDR   DDRC
 
+#define PTPORT   PORTD
+#define PTDDR   DDRD
+#define PT_LOAD_PIN  7
+#define PT_LO  PTPORT &= ~(1<<PT_LOAD_PIN)
+#define PT_HI  PTPORT |= (1<<PT_LOAD_PIN)
+
+
 //Oszi
-#define OSZIPORT           PORTC
-#define OSZIDDR            DDRC
-#define PULSA              5
-//#define OSZI_PULS_B        5
+#define OSZIPORT           PORTD
+#define OSZIDDR            DDRD
+#define PULSA              6
 #define OSZIA_LO OSZIPORT &= ~(1<<PULSA)
 #define OSZIA_HI OSZIPORT |= (1<<PULSA)
 #define OSZIA_TOGG OSZIPORT ^= (1<<PULSA)
@@ -45,7 +51,7 @@
 #define OSZIA_HI OSZIPORT |= (1<<PULSA)
 #define OSZIA_TOGG OSZIPORT ^= (1<<PULSA)
 
-// Port fuer INT0
+// Port fuer INT1
 #define INTERRUPT_PORT   PORTD
 #define INTERRUPT_DDR   DDRD
 

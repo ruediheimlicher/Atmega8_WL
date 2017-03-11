@@ -50,8 +50,6 @@ void wl_module_init()
    SPI_WL_DDR     |= (1<<SPI_WL_CSN);	//Ausgang fuer WL-CSN
    SPI_WL_PORT    |= (1<<SPI_WL_CSN);	//HI
    
-//   INTERRUPT_DDR &= ~(1<<INT0_PIN);
-//   INTERRUPT_PORT |= (1<<INT0_PIN);
  
    // Interrupt auf INT1
    INTERRUPT_DDR &= ~(1<<INT1_PIN);

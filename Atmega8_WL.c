@@ -29,6 +29,8 @@
 #include "wl_module.h" 
 #include "nRF24L01.h"
 
+#define VREF 265
+
 // lookup-Tabelle KTY84
 
 // pgm_read_word(&KTY[xy])
@@ -57,6 +59,54 @@ const uint16_t KTY[] PROGMEM =
    0xE535,	0xE7F7,	0xEAA3,	0xED7B,	0xF03C,	0xF32C,	0xF604,	0xF90E,
   
 };
+
+
+#define PT_OFFSET   30             // Offset, Start bei bei -30 °C
+#define PT_ADC_OFFSET   553         // Startwert der ADC-Messung
+#define PT_ADC_FAKTOR   32             // 0x60, Multiplikator
+
+// Syntax: xy = pgm_read_word(&PT[xy])
+const uint16_t PT[] PROGMEM =
+{
+   0x0,	0xF,	0x1F,	0x2F,	0x3F,	0x4F,	0x5F,	0x6F,
+   0x7F,	0x92,	0xA4,	0xB7,	0xC9,	0xDC,	0xEE,	0x101,
+   0x113,	0x126,	0x139,	0x14C,	0x15E,	0x171,	0x184,	0x196,
+   0x1A9,	0x1BC,	0x1CF,	0x1E2,	0x1F5,	0x208,	0x21B,	0x22E,
+   0x241,	0x254,	0x267,	0x27B,	0x28E,	0x2A1,	0x2B4,	0x2C7,
+   0x2DA,	0x2EE,	0x301,	0x315,	0x328,	0x33C,	0x34F,	0x363,
+   0x376,	0x389,	0x39D,	0x3B1,	0x3C5,	0x3D8,	0x3EC,	0x400,
+   0x413,	0x427,	0x43B,	0x44F,	0x463,	0x477,	0x48B,	0x49F,
+   0x4B2,	0x4C6,	0x4DA,	0x4EF,	0x503,	0x517,	0x52B,	0x540,
+   0x553,	0x567,	0x57C,	0x590,	0x5A5,	0x5B9,	0x5CE,	0x5E3,
+   0x5F6,	0x60A,	0x61F,	0x634,	0x649,	0x65E,	0x673,	0x688,
+   0x69B,	0x6B0,	0x6C5,	0x6DA,	0x6EF,	0x704,	0x719,	0x72F,
+   0x742,	0x757,	0x76C,	0x782,	0x797,	0x7AD,	0x7C2,	0x7D8,
+   0x7EA,	0x800,	0x816,	0x82C,	0x841,	0x857,	0x86D,	0x883,
+   0x896,	0x8AC,	0x8C2,	0x8D8,	0x8EE,	0x904,	0x91A,	0x930,
+   0x943,	0x959,	0x970,	0x986,	0x99C,	0x9B3,	0x9C9,	0x9E0,
+   0x9F3,	0xA09,	0xA20,	0xA37,	0xA4D,	0xA64,	0xA7B,	0xA92,
+   0xAA4,	0xABB,	0xAD2,	0xAE9,	0xB00,	0xB17,	0xB2E,	0xB46,
+   0xB58,	0xB70,	0xB87,	0xB9E,	0xBB6,	0xBCD,	0xBE4,	0xBFC,
+   0xC0E,	0xC26,	0xC3E,	0xC56,	0xC6D,	0xC85,	0xC9D,	0xCB5,
+   0xCC8,	0xCE0,	0xCF8,	0xD10,	0xD28,	0xD40,	0xD58,	0xD70,
+   0xD83,	0xD9B,	0xDB4,	0xDCC,	0xDE5,	0xDFD,	0xE16,	0xE2E,
+   0xE40,	0xE59,	0xE72,	0xE8A,	0xEA3,	0xEBC,	0xED5,	0xEEE,
+   0xF00,	0xF19,	0xF33,	0xF4C,	0xF65,	0xF7E,	0xF97,	0xFB1,
+   0xFC3,	0xFDD,	0xFF6,	0x1010,	0x1029,	0x1043,	0x105D,	0x1076,
+   0x1089,	0x10A3,	0x10BD,	0x10D7,	0x10F1,	0x110B,	0x1125,	0x113F,
+   0x1150,	0x116B,	0x1185,	0x11A0,	0x11BA,	0x11D4,	0x11EF,	0x1209,
+   0x121B,	0x1236,	0x1250,	0x126B,	0x1286,	0x12A1,	0x12BC,	0x12D7,
+   0x12E9,	0x1304,	0x131F,	0x133B,	0x1356,	0x1371,	0x138C,	0x13A8,
+   0x13B9,	0x13D5,	0x13F0,	0x140C,	0x1428,	0x1443,	0x145F,	0x147B,
+   0x148C,	0x14A8,	0x14C4,	0x14E1,	0x14FD,	0x1519,	0x1535,	0x1551,
+   0x1562,	0x157F,	0x159C,	0x15B8,	0x15D5,	0x15F1,	0x160E,	0x162B,
+   0x163C,	0x1659,	0x1676,	0x1693,	0x16B0,	0x16CD,	0x16EA,	0x1707,
+   0x1718,	0x1736,	0x1753,	0x1771,	0x178F,	0x17AC,	0x17CA,	0x17E7,
+   0x17F7,	0x1815,	0x1833,	0x1851,	0x186F,	0x188D,	0x18AC,	0x18CA,
+   0x18DA,	0x18F9,	0x1917,	0x1936,	0x1955,	0x1973,	0x1992,	0x19B0,
+   0x19C0,	0x19DF,	0x19FE,	0x1A1D,	0x1A3C,	0x1A5B,	0x1A7B,	0x1A9A,
+   0x1AA9,	0x1AC9,	0x1AE8,	0x1B08,	0x1B28,	0x1B47,	0x1B67,	0x1B86,
+   0x1B96,	0x1BB6,	0x1BD6,	0x1BF6,	0x1C16,	0x1C37,	0x1C57,	0x1C77,};
 
 
 uint16_t loopCount0=0;
@@ -405,6 +455,15 @@ void deviceinit(void)
    ADCPORT &= ~(1<<PORTC2);
    ADCDDR &= ~(1<<PORTC3);
    ADCPORT &= ~(1<<PORTC3);
+   ADCDDR &= ~(1<<PORTC4);
+   ADCPORT &= ~(1<<PORTC4);
+   ADCDDR &= ~(1<<PORTC5);
+   ADCPORT &= ~(1<<PORTC5);
+
+
+   
+   PTDDR |= (1<<PT_LOAD_PIN); // Pin fuer Impuls-load von pT1000
+   PTPORT &= ~(1<<PT_LOAD_PIN);// lo
 	
 
 	DDRB |= (1<<PORTB1);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
@@ -591,14 +650,14 @@ ISR(TIMER1_CAPT_vect)
    //TCNT1 = 0;
 }
 
-
+/*
 #pragma mark INT0 WL
 ISR(INT0_vect)
 {
    wl_spi_status |= (1<<7);
    
 }
-
+*/
 #pragma mark INT1 WL
 ISR(INT1_vect)
 {
@@ -663,7 +722,7 @@ int main (void)
    PORTC &= ~(1<<1);
    */
   // timer1_comp();
-   initADC(0);
+   initADC(2);
    
    uint8_t delaycount=10;
   #pragma mark while
@@ -741,8 +800,8 @@ int main (void)
 
             //lcd_put_tempbis99(temperatur);
 
-            lcd_gotoxy(18,3);
-            lcd_puthex(wl_data[9]);
+//            lcd_gotoxy(18,3);
+//            lcd_puthex(wl_data[9]);
             pwmpos = temperatur;
             OCR1A = temperatur;
             OSZIA_HI;
@@ -783,7 +842,7 @@ int main (void)
 			
 			loopCount1++;
 
-			if ((loopCount1 >0x00AF) )//&& (!(Programmstatus & (1<<MANUELL))))
+			if ((loopCount1 >0x02AF) )//&& (!(Programmstatus & (1<<MANUELL))))
 			{
             LOOPLED_PORT ^= (1<<LOOPLED_PIN);
             // WL-Routinen
@@ -800,31 +859,61 @@ int main (void)
             wl_module_CE_hi;
              */
             
-            // MARK: ADC Loop
+// MARK: ADC Loop
             
+ // MARK:  LM335
             uint16_t adc2wert = readKanal(2);
-            
+           
+            //lcd_puthex(adc2wert&0x00FF);
+            //lcd_puthex((adc2wert&0xFF00)>>8);
             lcd_gotoxy(0,3);
-            lcd_puthex(adc2wert&0x00FF);
-            lcd_puthex((adc2wert&0xFF00)>>8);
-            lcd_gotoxy(6,3);
+            lcd_puts("k2 ");
             lcd_putint12(adc2wert);
-
-            lcd_gotoxy(12,3);
+            
+           
             //lcd_putint12(adcwert);
-            uint16_t temperatur2 =  adc2wert*10/4; // *256/1024, unkalibriert
-            lcd_putint(temperatur2/10);
+            //uint16_t temperatur2 =  adc2wert*10/4; // *256/1024, unkalibriert
+            //lcd_gotoxy(12,1);
+            //lcd_putint12(temperatur2);
+
+            //uint32_t temperatur2 =  adc2wert*265; // *265/1024, unkalibriert
+            // uint16_t t1 = adc2wert*VREF;
+            
+            uint32_t temperatur2 = adc2wert;
+            temperatur2 *=VREF;
+            //t1 = t1/0x20;
+            //lcd_gotoxy(0,3);
+            //lcd_putint16(temperatur2);
+            temperatur2 = temperatur2/0x20;
+            lcd_gotoxy(8,1);
+            lcd_putint12(temperatur2);
+            temperatur2 = 10*temperatur2/0x20;
+            lcd_gotoxy(8,3);
+            lcd_putint12(temperatur2&0xFFFF);
+            
+            lcd_gotoxy(13,3);
+            lcd_putint12(temperatur2/10);
             lcd_putc('.');
             lcd_putint1(temperatur2%10);
            
- 
             
-            uint16_t adc3wert = readKanal(3); // KTY
-            lcd_gotoxy(0,2);
+            PT_HI;
+            
+            //lcd_gotoxy(0,1);
+            //_delay_us(300);
+            OSZIA_LO;
+            
+// MARK: KTY
+            // KTY
+            uint16_t adc3wert = readKanal(3);
+             PT_LO;
+            OSZIA_HI;
+//            lcd_gotoxy(0,0);
             //lcd_puthex(adc3wert&0x00FF);
             //lcd_puthex((adc3wert&0xFF00)>>8);
             //lcd_gotoxy(6,2);
-            lcd_putint12(adc3wert);
+//            lcd_putc('k');
+//            lcd_putint12(adc3wert);
          //   adc3wert-=6;
             /*
              #define KTY_OFFSET   30             // Offset, Start bei bei -30 °C
@@ -833,13 +922,13 @@ int main (void)
              // pgm_read_word(&KTY[xy])
              */
             uint16_t tableindex = ((adc3wert - ADC_OFFSET)>>3); // abrunden auf Intervalltakt
-            lcd_putc(' ');
+//            lcd_putc(' ');
            // lcd_putint(tableindex);
             uint8_t col = (adc3wert - ADC_OFFSET) & 0x07;
            // lcd_putc(' ');
            //lcd_putint2(col);
             uint16_t ktywert = pgm_read_word(&KTY[tableindex]); // Wert in Tabelle, unterer Wert
-            lcd_putint12(ktywert);
+//            lcd_putint12(ktywert);
 
             if (col) // nicht exakter wert, interpolieren
            {
@@ -848,13 +937,62 @@ int main (void)
               ktywert += (diff * col)>>3;
            }
             
-            lcd_putc(' ');
-            lcd_putint12((ktywert));
+//            lcd_putc(' ');
+//            lcd_putint12((ktywert));
 
-            lcd_putc(' ');
-            lcd_putint12((ktywert/KTY_FAKTOR)-KTY_OFFSET);
-
+       //     lcd_putc(' ');
+       //     lcd_putint12((ktywert/KTY_FAKTOR)-KTY_OFFSET);
+// MARK: PT1000
+            // PT1000
+            uint16_t adc4wert = readKanal(4);
+            lcd_gotoxy(0,2);
+            lcd_puts("k4 ");
+            lcd_putint12(adc4wert);
+            //uint32_t temperatur4 =  adc4wert*VREF; // *256/1024, unkalibriert
+            //temperatur4 /= 32;
             
+            //lcd_putc(' ');
+            //lcd_putint16(temperatur4 & 0xFFFF);
+            //
+            //lcd_putint(temperatur4/10);
+            //lcd_putc('.');
+            //lcd_putint1(temperatur4%10);
+
+            // lookup
+            //lcd_gotoxy(0,2);
+            uint16_t pttableindex = ((adc4wert - PT_ADC_OFFSET)>>3); // abrunden auf Intervalltakt
+            lcd_putc(' ');
+            lcd_putint2(pttableindex);
+            uint8_t ptcol = (adc4wert - PT_ADC_OFFSET) & 0x07;
+            lcd_putc(' ');
+            lcd_putint1(ptcol);
+            lcd_putc('*');
+            uint16_t ptwert = pgm_read_word(&PT[8*pttableindex+ptcol]); // Wert in Tabelle
+            lcd_putint12(ptwert);
+
+            //lcd_putc('*');
+            //lcd_putint12((ptwert/PT_ADC_FAKTOR));
+            ptwert /= PT_ADC_FAKTOR;
+            ptwert -= PT_OFFSET;
+            lcd_gotoxy(12,1);
+            lcd_putc(' ');
+            lcd_putc('t');
+            //lcd_putc(' ');
+
+            //lcd_putc('*');
+            if (ptwert < 100)
+            {
+               lcd_putc(' ');
+               lcd_putint2(ptwert);
+            }
+           else
+           {
+              lcd_putint(ptwert);
+           }
+            lcd_putc('*');
+            
+            // end lookup
+
 //            lcd_putc(' ');
 //            uint16_t diff = pgm_read_word(&KTY[tableindex+1])-ktywert;
 //            diff = (diff * col)>>3;
