@@ -64,3 +64,12 @@
 #define SPI_WL_CE       PC0
 #define SPI_WL_CSN      PC1
 
+
+// PWM-detect
+
+#define PWMHI  1 // Bit fuer HI
+#define PWM_DETECT_PORT    PORTB
+#define PWM_DETECT_DDR     DDRB
+#define PWM_DETECT_PIN     PINB
+#define PWM_DETECT         7 // Pin fuer detect
+#define PWM_DETECT_BIT     1 // bit fuer HI

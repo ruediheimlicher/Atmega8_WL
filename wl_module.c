@@ -64,7 +64,7 @@ void wl_module_init()
 #if defined(__AVR_ATmega8__)
    // Initialize external interrupt 0 (PD2)
    MCUCR = ((1<<ISC11));	// Set external interupt on falling edge
-   GICR  = ((1<<INT1)|(0<<INT0));							// Activate INT0
+   GICR  = ((1<<INT1)|(0<<INT0));							// Activate INT1
 #endif // __AVR_ATmega8__
    
 #if defined(__AVR_ATmega88A__)
@@ -128,14 +128,18 @@ extern void wl_module_rx_config()
    //Set RX_Address Pipe 0
    data[0]= data[1]= data[2]= data[3]= data[4]= RX_ADDR_P0_B0_DEFAULT_VAL;
    wl_module_set_rx_addr(data, 5, 0);
+   
    //Set RX_Address Pipe 1
    data[0]= data[1]= data[2]= data[3]= data[4]= RX_ADDR_P1_B0_DEFAULT_VAL;
    wl_module_set_rx_addr(data, 5, 1);
+   
    //Set RX_Address Pipe 2-5
    data[0]=RX_ADDR_P2_DEFAULT_VAL;
    wl_module_set_rx_addr(data, 1, 2);
+   
    data[0]=RX_ADDR_P3_DEFAULT_VAL;
    wl_module_set_rx_addr(data, 1, 3);
+   
    data[0]=RX_ADDR_P4_DEFAULT_VAL;
    wl_module_set_rx_addr(data, 1, 4);
    data[0]=RX_ADDR_P5_DEFAULT_VAL;

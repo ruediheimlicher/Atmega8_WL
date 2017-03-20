@@ -14,6 +14,7 @@
 #include <avr/pgmspace.h>
 #include <string.h>
 #include <inttypes.h>
+#include <avr/eeprom.h>
 //#define F_CPU 4000000UL  // 4 MHz
 #include <avr/delay.h>
 #include "lcd.c"
@@ -29,7 +30,7 @@
 #include "wl_module.h" 
 #include "nRF24L01.h"
 
-#define VREF 265
+#define VREF 256
 
 // lookup-Tabelle KTY84
 
@@ -60,7 +61,7 @@ const uint16_t KTY[] PROGMEM =
   
 };
 
-
+/*
 #define PT_OFFSET   30             // Offset, Start bei bei -30 °C
 #define PT_ADC_OFFSET   553         // Startwert der ADC-Messung
 #define PT_ADC_FAKTOR   32             // 0x60, Multiplikator
@@ -107,6 +108,49 @@ const uint16_t PT[] PROGMEM =
    0x19C0,	0x19DF,	0x19FE,	0x1A1D,	0x1A3C,	0x1A5B,	0x1A7B,	0x1A9A,
    0x1AA9,	0x1AC9,	0x1AE8,	0x1B08,	0x1B28,	0x1B47,	0x1B67,	0x1B86,
    0x1B96,	0x1BB6,	0x1BD6,	0x1BF6,	0x1C16,	0x1C37,	0x1C57,	0x1C77,};
+
+*/
+#define PT_OFFSET   30             // Offset, Start bei bei -30 °C
+#define PT_ADC_OFFSET   480         // Startwert der ADC-Messung
+#define PT_ADC_FAKTOR   32             // 0x60, Multiplikator
+
+// Syntax: xy = pgm_read_word(&PT[xy])
+const uint16_t PT[] PROGMEM =
+{
+   0x0,	0x1D,	0x3A,	0x56,	0x73,	0x8F,	0xAC,	0xC8,
+   0xE6,	0x104,	0x121,	0x13F,	0x15C,	0x17A,	0x197,	0x1B5,
+   0x1D3,	0x1F1,	0x20F,	0x22E,	0x24C,	0x26B,	0x289,	0x2A8,
+   0x2C6,	0x2E5,	0x305,	0x324,	0x343,	0x363,	0x382,	0x3A2,
+   0x3C0,	0x3E0,	0x401,	0x421,	0x442,	0x462,	0x483,	0x4A3,
+   0x4C1,	0x4E2,	0x504,	0x526,	0x547,	0x569,	0x58B,	0x5AC,
+   0x5C9,	0x5EC,	0x60F,	0x632,	0x655,	0x677,	0x69A,	0x6BD,
+   0x6DA,	0x6FE,	0x722,	0x746,	0x76B,	0x78F,	0x7B3,	0x7D7,
+   0x7F3,	0x818,	0x83E,	0x863,	0x889,	0x8AE,	0x8D4,	0x8F9,
+   0x914,	0x93B,	0x962,	0x989,	0x9AF,	0x9D6,	0x9FD,	0xA24,
+   0xA3F,	0xA67,	0xA90,	0xAB8,	0xAE0,	0xB09,	0xB31,	0xB59,
+   0xB73,	0xB9D,	0xBC7,	0xBF1,	0xC1B,	0xC44,	0xC6E,	0xC98,
+   0xCB0,	0xCDC,	0xD07,	0xD33,	0xD5E,	0xD8A,	0xDB5,	0xDE1,
+   0xDF8,	0xE25,	0xE53,	0xE80,	0xEAD,	0xEDB,	0xF08,	0xF35,
+   0xF4B,	0xF7A,	0xFA9,	0xFD9,	0x1008,	0x1037,	0x1066,	0x1095,
+   0x10A9,	0x10DA,	0x110B,	0x113C,	0x116E,	0x119F,	0x11D0,	0x1201,
+   0x1213,	0x1246,	0x127A,	0x12AD,	0x12E0,	0x1314,	0x1347,	0x137A,
+   0x1389,	0x13BF,	0x13F4,	0x142A,	0x1460,	0x1495,	0x14CB,	0x1500,
+   0x150D,	0x1545,	0x157D,	0x15B5,	0x15ED,	0x1625,	0x165D,	0x1695,
+   0x169E,	0x16D9,	0x1714,	0x174E,	0x1789,	0x17C3,	0x17FE,	0x1839,
+   0x183D,	0x187A,	0x18B8,	0x18F5,	0x1933,	0x1970,	0x19AE,	0x19EB,
+   0x19EC,	0x1A2D,	0x1A6D,	0x1AAE,	0x1AEE,	0x1B2E,	0x1B6F,	0x1BAF,
+   0x1BA9,	0x1BEC,	0x1C30,	0x1C74,	0x1CB7,	0x1CFB,	0x1D3E,	0x1D82,
+   0x1D7A,	0x1DC1,	0x1E08,	0x1E4F,	0x1E96,	0x1EDD,	0x1F24,	0x1F6C,
+   0x1F5A,	0x1FA5,	0x1FF0,	0x203B,	0x2085,	0x20D0,	0x211B,	0x2166,
+   0x214D,	0x219B,	0x21EA,	0x2239,	0x2288,	0x22D7,	0x2326,	0x2375,
+   0x2352,	0x23A5,	0x23F9,	0x244C,	0x249F,	0x24F2,	0x2546,	0x2599,
+   0x2570,	0x25C8,	0x2620,	0x2678,	0x26D0,	0x2728,	0x2780,	0x27D8,
+   0x279D,	0x27FA,	0x2857,	0x28B5,	0x2912,	0x296F,	0x29CC,	0x2A2A,
+   0x29E5,	0x2A48,	0x2AAB,	0x2B0E,	0x2B71,	0x2BD4,	0x2C37,	0x2C9A,
+   0x2C43,	0x2CAC,	0x2D15,	0x2D7E,	0x2DE7,	0x2E51,	0x2EBA,	0x2F23,
+   0x2EBC,	0x2F2C,	0x2F9C,	0x300C,	0x307C,	0x30EC,	0x315C,	0x31CC,
+   0x314D,	0x31C5,	0x323C,	0x32B4,	0x332C,	0x33A3,	0x341B,	0x3492,};
+
 
 
 uint16_t loopCount0=0;
@@ -172,6 +216,16 @@ volatile uint16_t					Manuellcounter=0; // Countr fuer Timeout
 volatile uint8_t data;
 
 volatile uint16_t	spiwaitcounter=0;
+
+//PWM-detector
+volatile uint32_t	pwmhi=0; // dauer des hi
+volatile uint32_t	pwmpuls=0; // periodendauer
+
+volatile uint16_t	pwmhicounter=0;
+volatile uint16_t	pwmpulscounter=0;
+
+volatile uint8_t pwmstatus=0;
+
 
 
 volatile uint8_t spi_status=0;
@@ -443,9 +497,11 @@ void deviceinit(void)
 {
 //	MANUELL_DDR |= (1<<MANUELLPIN);		//Pin 5 von PORT D als Ausgang fuer Manuell
 	//MANUELL_PORT &= ~(1<<MANUELLPIN);
- 	//DDRD |= (1<<CONTROL_A);	//Pin 6 von PORT D als Ausgang fuer Servo-Enable
-	//DDRD |= (1<<CONTROL_B);	//Pin 7 von PORT D als Ausgang fuer Servo-Impuls
-	LOOPLED_DDR |= (1<<LOOPLED_PIN);
+
+   PWM_DETECT_DDR &= ~(1<<PWM_DETECT);
+   PWM_DETECT_PORT |= (1<<PWM_DETECT);
+   
+   LOOPLED_DDR |= (1<<LOOPLED_PIN);
 	//PORTD &= ~(1<<CONTROL_B);
 	//PORTD &= ~(1<<CONTROL_A);
    OSZIDDR |= (1<<PULSA);	//Pin 0 von  als Ausgang fuer OSZI
@@ -463,17 +519,20 @@ void deviceinit(void)
 
    
    PTDDR |= (1<<PT_LOAD_PIN); // Pin fuer Impuls-load von pT1000
-   PTPORT &= ~(1<<PT_LOAD_PIN);// lo
+   PTPORT |= (1<<PT_LOAD_PIN);// hi
 	
+   DDRB |= (1<<PORTB0);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
+   PORTB |= (1<<PORTB0);	//LO
+
 
 	DDRB |= (1<<PORTB1);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
 	PORTB &= ~(1<<PORTB1);	//LO
 	
 
 	//LCD
-	LCD_DDR |= (1<<LCD_RSDS_PIN);	//Pin 5 von PORT C als Ausgang fuer LCD
- 	LCD_DDR |= (1<<LCD_ENABLE_PIN);	//Pin 6 von PORT C als Ausgang fuer LCD
-	LCD_DDR |= (1<<LCD_CLOCK_PIN);	//Pin 7 von PORT C als Ausgang fuer LCD
+	LCD_DDR |= (1<<LCD_RSDS_PIN);    //Pin  als Ausgang fuer LCD
+ 	LCD_DDR |= (1<<LCD_ENABLE_PIN);	//Pin  als Ausgang fuer LCD
+	LCD_DDR |= (1<<LCD_CLOCK_PIN);	//Pin  als Ausgang fuer LCD
 
 #if defined(__AVR_ATmega8__)
    // Initialize external interrupt 0 (PD2)
@@ -658,6 +717,72 @@ ISR(INT0_vect)
    
 }
 */
+
+
+void timer2(void)
+{
+   TCCR2 |= (1<<CS21);     // Start Timer 2 with prescaler 1024
+   TIMSK |= (1<< TOIE2);
+   TIMSK |= (1 << OCIE2);
+   TCCR2 |= (1 << WGM21);
+   TCNT2=0;
+   OCR2   = 99; // 10kHz
+}
+
+ISR(TIMER2_OVF_vect)
+{
+   //OSZIA_TOGG;
+   
+}
+
+
+ISR(TIMER2_COMP_vect) // ca 4 us
+{
+   //OSZIA_LO;
+   pwmpulscounter++;
+   
+   if (PWM_DETECT_PIN & (1<<PWM_DETECT)) // Pin ist Hi
+   {
+      if (pwmstatus & (1<<PWM_DETECT_BIT)) // Pin schon gesetzt, zaehlen
+      {
+         pwmhicounter++;
+         
+
+      }
+      else // Pin ist neu HI, pulsstart setzen, counter resetten, pulsdauer speichern
+
+      {
+         pwmstatus |= (1<<PWM_DETECT_BIT);
+         pwmhicounter=0;
+         
+         pwmpuls = pwmpulscounter;
+         pwmpulscounter=0;
+         
+                  
+      }
+   }
+   else // pin ist LO
+   {
+      if (pwmstatus & (1<<PWM_DETECT_BIT)) // Pin war gesetzt, hi-dauer speichern
+      {
+          pwmstatus &= ~(1<<PWM_DETECT_BIT);
+         pwmhi = pwmhicounter;
+         pwmhicounter=0;
+         
+      }
+      else // Pin war schon LO, warten auf neuen puls
+      {
+        
+         
+         
+      }
+
+   }
+   
+   //OSZIA_HI;
+   // handle interrupt
+}
+
 #pragma mark INT1 WL
 ISR(INT1_vect)
 {
@@ -728,6 +853,11 @@ int main (void)
   #pragma mark while
    uint8_t readstatus = wl_module_get_data((void*)&wl_data);
    //lcd_puts(" los");
+   
+   
+   uint8_t eevar=13;
+   
+   timer2();
    sei();
    while (1)
 	{
@@ -804,7 +934,7 @@ int main (void)
 //            lcd_puthex(wl_data[9]);
             pwmpos = temperatur;
             OCR1A = temperatur;
-            OSZIA_HI;
+            //OSZIA_HI;
             
             wl_spi_status |= (1<<6);
             
@@ -839,12 +969,45 @@ int main (void)
 
 		if (loopCount0 >=0xFE)
 		{
-			
+         
 			loopCount1++;
 
 			if ((loopCount1 >0x02AF) )//&& (!(Programmstatus & (1<<MANUELL))))
 			{
+            /*
+            char read[5] = {};
+            eeprom_write_byte (0, eevar++);
+            delay_ms(1);
+            read[0] = eeprom_read_byte((const uint8_t *)(0));
+            lcd_gotoxy(0,0);
+            lcd_puthex(read[0]);
+            */
+            /*
+             eeprom_write_byte (0, '0');
+             eeprom_write_byte (1, '1');
+             eeprom_write_byte (2, '2');
+             eeprom_write_byte (3, '3');
+             eeprom_write_byte (4, '4');
+             */
+
+            
             LOOPLED_PORT ^= (1<<LOOPLED_PIN);
+           
+            lcd_gotoxy(0,0);
+            lcd_puts("h ");
+            lcd_putint16(pwmhi);
+            //lcd_gotoxy(8,0);
+            lcd_puts(" p ");
+            lcd_putint16(pwmpuls);
+            //OSZIA_LO;
+            uint16_t pwm = pwmhi*100/pwmpuls; // 2us
+            //OSZIA_HI;
+            lcd_gotoxy(0,1);
+
+            lcd_puts("m ");
+            lcd_putint12(pwm);
+           
+
             // WL-Routinen
             
             // WL
@@ -862,13 +1025,21 @@ int main (void)
 // MARK: ADC Loop
             
  // MARK:  LM335
+            VREF_Quelle = ADC_REF_INTERNAL;
+            uint8_t i=0;
+            for (i=0;i<16;i++) // 3.5ms
+            {
+               readKanal(2);
+            }
             uint16_t adc2wert = readKanal(2);
-           
             //lcd_puthex(adc2wert&0x00FF);
             //lcd_puthex((adc2wert&0xFF00)>>8);
             lcd_gotoxy(0,3);
             lcd_puts("k2 ");
             lcd_putint12(adc2wert);
+            
+            
+            
             
            
             //lcd_putint12(adcwert);
@@ -897,18 +1068,17 @@ int main (void)
             lcd_putint1(temperatur2%10);
            
             
-            PT_HI;
+           
             
             //lcd_gotoxy(0,1);
             //_delay_us(300);
-            OSZIA_LO;
+            
             
 // MARK: KTY
             // KTY
             uint16_t adc3wert = readKanal(3);
-             PT_LO;
-            OSZIA_HI;
-//            lcd_gotoxy(0,0);
+            
+            //            lcd_gotoxy(0,0);
             //lcd_puthex(adc3wert&0x00FF);
             //lcd_puthex((adc3wert&0xFF00)>>8);
             //lcd_gotoxy(6,2);
@@ -944,10 +1114,27 @@ int main (void)
        //     lcd_putint12((ktywert/KTY_FAKTOR)-KTY_OFFSET);
 // MARK: PT1000
             // PT1000
-            uint16_t adc4wert = readKanal(4);
             lcd_gotoxy(0,2);
             lcd_puts("k4 ");
+            PT_LO;
+            VREF_Quelle = ADC_REF_POWER;
+            for (i=0;i<16;i++)
+            {
+               readKanal(4);
+            }
+
+            //delay_ms(10);
+            
+            //_delay_us(200);
+            OSZIA_LO;
+            uint16_t adc4wert = readKanal(4);
+            OSZIA_HI;
+             PT_HI;
             lcd_putint12(adc4wert);
+            
+            
+            
+
             //uint32_t temperatur4 =  adc4wert*VREF; // *256/1024, unkalibriert
             //temperatur4 /= 32;
             
@@ -962,12 +1149,19 @@ int main (void)
             //lcd_gotoxy(0,2);
             uint16_t pttableindex = ((adc4wert - PT_ADC_OFFSET)>>3); // abrunden auf Intervalltakt
             lcd_putc(' ');
-            lcd_putint2(pttableindex);
-            uint8_t ptcol = (adc4wert - PT_ADC_OFFSET) & 0x07;
-            lcd_putc(' ');
-            lcd_putint1(ptcol);
+            pttableindex = adc4wert - PT_ADC_OFFSET;
+            lcd_putint(pttableindex);
+            
+            
+            //lcd_putint2(pttableindex);
+            
+            //uint8_t ptcol = (pttableindex) & 0x07;
+            //lcd_putc(' ');
+            //lcd_putint1(ptcol);
             lcd_putc('*');
-            uint16_t ptwert = pgm_read_word(&PT[8*pttableindex+ptcol]); // Wert in Tabelle
+            
+            //uint16_t ptwert = pgm_read_word(&PT[8*pttableindex+ptcol]); // Wert in Tabelle
+            uint16_t ptwert = pgm_read_word(&PT[adc4wert - PT_ADC_OFFSET]); // Wert in Tabelle
             lcd_putint12(ptwert);
 
             //lcd_putc('*');
@@ -1029,13 +1223,17 @@ int main (void)
             payload[6] = 8;
             payload[7] = 2;
             
-            payload[10] = adc2wert & 0x00FF;
-            payload[11] = (adc2wert & 0xFF00)>>8;
- 
+//            payload[10] = adc2wert & 0x00FF;
+ //           payload[11] = (adc2wert & 0xFF00)>>8;
+             payload[10] = temperatur2 & 0x00FF;
+            payload[11] = (temperatur2 & 0xFF00)>>8;
+
 //            payload[12] = adc3wert & 0x00FF;
 //            payload[13] = (adc3wert & 0xFF00)>>8;
-            payload[12] = (ktywert/KTY_FAKTOR) & 0x00FF;
-            payload[13] = ((ktywert/KTY_FAKTOR) & 0xFF00)>>8;
+//            payload[12] = (ktywert/KTY_FAKTOR) & 0x00FF;
+//            payload[13] = ((ktywert/KTY_FAKTOR) & 0xFF00)>>8;
+            payload[12] = (ptwert) & 0x00FF;
+            payload[13] = ((ptwert) & 0xFF00)>>8;
             
             if (wl_spi_status & (1<<6))
             {

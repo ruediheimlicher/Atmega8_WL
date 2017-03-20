@@ -94,7 +94,7 @@ extern void wl_module_set_RADDR(uint8_t * adr);
 extern void wl_module_set_TADDR(uint8_t * adr);
 extern uint8_t wl_module_data_ready(void);
 //extern void wl_module_get_data(uint8_t * data);
-extern uint8_t wl_module_get_data(uint8_t * data);			//Gibt die Werte des STATUS-Registers zurück
+extern uint8_t wl_module_get_data(uint8_t * data);			//Gibt die Werte des STATUS-Registers zurueck
 
 //Public functions
 

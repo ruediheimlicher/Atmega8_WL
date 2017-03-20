@@ -48,7 +48,7 @@ ADMUX = ADC_REF_EXTERNAL | (kanal & 0x1F);
 
 void initADC(uint8_t derKanal)
 {
-   VREF_Quelle = ADC_REF_INTERNAL;
+   VREF_Quelle = ADC_REF_POWER;
    //ADCSRA = (1<<ADEN) |(1<<ADPS2) | (1<<ADPS0);
    ADCSRA = (1<<ADEN) | ADC_PRESCALER;       // Frequenzvorteiler auf 32 setzen und ADC aktivieren
    
