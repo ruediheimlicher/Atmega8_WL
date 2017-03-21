@@ -1240,6 +1240,7 @@ int main (void)
                wl_spi_status &= ~(1<<6);
                
                wl_module_tx_config(0);
+               
                //lcd_putc('b');
                
                wl_module_send(payload,wl_module_PAYLOAD);
