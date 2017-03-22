@@ -64,7 +64,8 @@
 #define SPI_WL_CE       PC0
 #define SPI_WL_CSN      PC1
 
-
+#define WL_ISR_RECV  7
+#define WL_SEND_REQUEST 6
 // PWM-detect
 
 #define PWMHI  1 // Bit fuer HI

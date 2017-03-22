@@ -14,6 +14,8 @@
 
 #define WL_SS       DDB2
 
+#define WL_PIPE   0
+
 void wl_spi_init()
 
 // Initialize pins for spi communication

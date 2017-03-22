@@ -240,6 +240,7 @@ volatile uint8_t wl_spi_status;
 char itoabuffer[20];
 volatile uint8_t wl_data[wl_module_PAYLOAD] = {};
 
+volatile uint8_t pipenummer = 0;
 
 //volatile char text[] = {'*','M','a','s','t','e','r','*'};
 char* text = "* Master *";
@@ -713,7 +714,7 @@ ISR(TIMER1_CAPT_vect)
 #pragma mark INT0 WL
 ISR(INT0_vect)
 {
-   wl_spi_status |= (1<<7);
+   wl_spi_status |= (1<<WL_ISR_RECV);
    
 }
 */
@@ -786,7 +787,7 @@ ISR(TIMER2_COMP_vect) // ca 4 us
 #pragma mark INT1 WL
 ISR(INT1_vect)
 {
-   wl_spi_status |= (1<<7);
+   wl_spi_status |= (1<<WL_ISR_RECV);
    
 }
 
@@ -867,7 +868,7 @@ int main (void)
 		//LOOPLED_PORT ^= (1<<LOOPLED_PIN);
       //incoming = SPDR;
       
-      if (wl_spi_status & (1<<7)) // in ISR gesetzt
+      if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt
       {
          
          if (int0counter < 0x2F)
@@ -879,7 +880,7 @@ int main (void)
             int0counter=0;
          }
          
-         wl_spi_status &= ~(1<<7);
+         wl_spi_status &= ~(1<<WL_ISR_RECV);
          
          //lcd_gotoxy(14,1);
          //lcd_puthex(int0counter);
@@ -894,14 +895,16 @@ int main (void)
          lcd_puthex(wl_status & (1<<TX_FULL));
          */
          wl_status = wl_module_get_status();
-         
+         pipenummer = wl_module_get_rx_pipe();
+         lcd_gotoxy(15,0);
+         lcd_puthex(pipenummer);
          lcd_gotoxy(0,0);
          //lcd_puts("          ");
          if (wl_status & (1<<RX_DR)) // IRQ: Package has been sent
          {
             //OSZIA_LO;
-            lcd_gotoxy(0,0);
-            lcd_puts("RX");
+            //lcd_gotoxy(0,0);
+            //lcd_puts("RX");
             uint8_t rec = wl_module_get_rx_pw(0);
             //lcd_gotoxy(0,3);
             //lcd_puthex(rec);
@@ -936,7 +939,7 @@ int main (void)
             OCR1A = temperatur;
             //OSZIA_HI;
             
-            wl_spi_status |= (1<<6);
+            wl_spi_status |= (1<<WL_SEND_REQUEST);
             
           }
          
@@ -992,7 +995,10 @@ int main (void)
 
             
             LOOPLED_PORT ^= (1<<LOOPLED_PIN);
-           
+
+            
+            // Anzeige PWM
+            /*
             lcd_gotoxy(0,0);
             lcd_puts("h ");
             lcd_putint16(pwmhi);
@@ -1006,7 +1012,7 @@ int main (void)
 
             lcd_puts("m ");
             lcd_putint12(pwm);
-           
+           */
 
             // WL-Routinen
             
@@ -1234,12 +1240,12 @@ int main (void)
 //            payload[13] = ((ktywert/KTY_FAKTOR) & 0xFF00)>>8;
             payload[12] = (ptwert) & 0x00FF;
             payload[13] = ((ptwert) & 0xFF00)>>8;
-            
-            if (wl_spi_status & (1<<6))
+            payload[14] = maincounter; // fortlaufender Wert, kontrolle ob hanging
+            if (wl_spi_status & (1<<WL_SEND_REQUEST)) // senden starten
             {
-               wl_spi_status &= ~(1<<6);
+               wl_spi_status &= ~(1<<WL_SEND_REQUEST);
                
-               wl_module_tx_config(0);
+               wl_module_tx_config(0); // senden an device 0
                
                //lcd_putc('b');
                
@@ -1257,7 +1263,7 @@ int main (void)
                maincounter++;
                PTX=0;
 
-               wl_module_rx_config();
+               wl_module_rx_config(); // empfangen wieder einstellen
                
             } // if
             //lcd_gotoxy(0,3);
