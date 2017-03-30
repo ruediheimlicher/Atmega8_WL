@@ -66,6 +66,13 @@
 
 #define WL_ISR_RECV  7
 #define WL_SEND_REQUEST 6
+#define WL_NEXT_REQUEST 5
+
+#define WL_DATA_PENDENT    4
+#define WL_DATA_WAIT   3
+
+
+
 // PWM-detect
 
 #define PWMHI  1 // Bit fuer HI
