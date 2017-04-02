@@ -217,6 +217,13 @@ volatile uint8_t data;
 
 volatile uint16_t	spiwaitcounter=0;
 
+
+volatile uint32_t	loadcounter=0; // schaltet load fuer PowerBanl-Reset ein
+
+
+
+
+
 //PWM-detector
 volatile uint32_t	pwmhi=0; // dauer des hi
 volatile uint32_t	pwmpuls=0; // periodendauer
@@ -501,6 +508,9 @@ void deviceinit(void)
 //	MANUELL_DDR |= (1<<MANUELLPIN);		//Pin 5 von PORT D als Ausgang fuer Manuell
 	//MANUELL_PORT &= ~(1<<MANUELLPIN);
 
+   LOADDDR |= (1<<LOADPIN);
+   LOADPORT |= (1<<LOADPIN);
+   
    PWM_DETECT_DDR &= ~(1<<PWM_DETECT);
    PWM_DETECT_PORT |= (1<<PWM_DETECT);
    
@@ -524,8 +534,8 @@ void deviceinit(void)
    PTDDR |= (1<<PT_LOAD_PIN); // Pin fuer Impuls-load von pT1000
    PTPORT |= (1<<PT_LOAD_PIN);// hi
 	
-   DDRB |= (1<<PORTB0);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
-   PORTB |= (1<<PORTB0);	//LO
+ //  DDRB |= (1<<PORTB0);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
+//   PORTB |= (1<<PORTB0);	//LO
 
 
 	DDRB |= (1<<PORTB1);	//OC1A: Bit 1 von PORT B als Ausgang fuer PWM
@@ -742,6 +752,25 @@ ISR(TIMER2_OVF_vect)
 ISR(TIMER2_COMP_vect) // ca 4 us
 {
    //OSZIA_LO;
+   // reset fuer PowerBank
+   loadcounter++;
+   if (loadcounter == 1)
+   {
+      LOADPORT |= (1<<LOADPIN); // Impuls start
+   }
+
+   if (loadcounter == 0xF00)
+   {
+      LOADPORT &= ~(1<<LOADPIN); // Impuls end
+   }
+   
+   if (loadcounter == 0xFFFF) // Abstand
+   {
+      loadcounter=0;
+   }
+   
+
+   // PWM bestimmen
    pwmpulscounter++;
    
    if (PWM_DETECT_PIN & (1<<PWM_DETECT)) // Pin ist Hi
@@ -749,19 +778,14 @@ ISR(TIMER2_COMP_vect) // ca 4 us
       if (pwmstatus & (1<<PWM_DETECT_BIT)) // Pin schon gesetzt, zaehlen
       {
          pwmhicounter++;
-         
-
       }
       else // Pin ist neu HI, pulsstart setzen, counter resetten, pulsdauer speichern
-
       {
          pwmstatus |= (1<<PWM_DETECT_BIT);
          pwmhicounter=0;
          
          pwmpuls = pwmpulscounter;
          pwmpulscounter=0;
-         
-                  
       }
    }
    else // pin ist LO
@@ -909,14 +933,14 @@ int main (void)
          pipenummer = wl_module_get_rx_pipe();
          
          delay_ms(3);
-   //      lcd_gotoxy(10,0);
-  //       lcd_putc('p');
-   //      lcd_puthex(pipenummer);
+         lcd_gotoxy(10,0);
+         lcd_putc('p');
+         lcd_puthex(pipenummer);
                   
          
          if (pipenummer == WL_PIPE) // Request ist fuer uns, Data schicken
          {
-            lcd_gotoxy(10,0);
+            lcd_gotoxy(14,0);
             lcd_puts("p ok");
             //lcd_gotoxy(0,0);
             delay_ms(2);
@@ -1009,8 +1033,8 @@ int main (void)
             }
             else
             {
-               //  lcd_gotoxy(16,2);
-               //  lcd_puts("***");
+               lcd_gotoxy(14,0);
+               lcd_puts("p ex");
                
             }
             
@@ -1046,9 +1070,6 @@ int main (void)
             lcd_puts("RT");
             
             wl_module_config_register(STATUS, (1<<MAX_RT)); // Clear Interrupt Bit
-            wl_module_CE_hi;
-            _delay_us(10);
-            wl_module_CE_lo;
          }
          
          
@@ -1218,7 +1239,7 @@ int main (void)
             //     lcd_putint12((ktywert/KTY_FAKTOR)-KTY_OFFSET);
             // MARK: PT1000
             // PT1000
-            lcd_gotoxy(0,2);
+            lcd_gotoxy(0,1);
             lcd_puts("k4 ");
             PT_LO;
             VREF_Quelle = ADC_REF_POWER;
@@ -1272,7 +1293,7 @@ int main (void)
             //lcd_putint12((ptwert/PT_ADC_FAKTOR));
             ptwert /= PT_ADC_FAKTOR;
             ptwert -= PT_OFFSET;
-            lcd_gotoxy(12,1);
+            lcd_gotoxy(10,1);
             //lcd_putc(' ');
             lcd_putc('t');
             //lcd_putc(' ');

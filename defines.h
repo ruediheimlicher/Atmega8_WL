@@ -18,8 +18,12 @@
 #define LOOPLED_DDR	DDRD
 #define LOOPLED_PIN	4
 
-#define ADCPORT   PORTC
-#define ADCDDR   DDRC
+#define LOADDDR      DDRB
+#define LOADPORT     PORTB
+#define LOADPIN      0
+
+#define ADCPORT      PORTC
+#define ADCDDR       DDRC
 
 #define PTPORT   PORTD
 #define PTDDR   DDRD
