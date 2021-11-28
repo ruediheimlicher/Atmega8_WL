@@ -891,7 +891,7 @@ int main (void)
       //  PORTC |= (1<<0);
       loopCount0 ++;
       //_delay_ms(2);
-      //LOOPLED_PORT ^= (1<<LOOPLED_PIN);
+      LOOPLED_PORT ^= (1<<LOOPLED_PIN);
       //incoming = SPDR;
       
       if (wl_spi_status & (1<<WL_ISR_RECV)) // in ISR gesetzt, etwas ist angekommen, Master fragt nach Daten
